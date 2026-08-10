@@ -1,0 +1,867 @@
+/* ---------- Panel lateral ---------- */
+
+.panel {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  width: min(390px, calc(100vw - 24px));
+  max-height: calc(100% - 24px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  z-index: 3;
+}
+
+.panel-card {
+  background: var(--surface);
+  border-radius: 10px;
+  box-shadow: var(--shadow-2);
+  overflow: hidden;
+}
+
+.panel-main {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+}
+
+.detail,
+.list,
+.form {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.panel-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  flex: none;
+}
+
+.panel-header h2 {
+  margin: 0;
+  font: 500 17px/1.25 var(--sans);
+  color: var(--text-strong);
+}
+
+.panel-body {
+  padding: 12px 14px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+}
+
+.panel-footer {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  padding: 10px 14px;
+  border-top: 1px solid var(--border);
+  flex: none;
+}
+
+.panel-footer--inline {
+  border-top: 0;
+  padding: 4px 0 0;
+}
+
+.section-title {
+  margin: 6px 0 0;
+  font: 500 14px/1.2 var(--sans);
+  color: var(--text-strong);
+}
+
+/* ---------- Controles ---------- */
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text-strong);
+  font: 500 13px var(--sans);
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.button:hover {
+  background: var(--surface-hover);
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.button--primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.button--primary:hover {
+  background: #1765cc;
+}
+
+.button--danger {
+  color: #d93025;
+}
+
+.button--block {
+  width: 100%;
+}
+
+.icon-button {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.icon-button:hover {
+  background: var(--surface-hover);
+  color: var(--text-strong);
+}
+
+.link-button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: 500 12px var(--sans);
+  cursor: pointer;
+}
+
+.link-button--danger {
+  color: #d93025;
+}
+
+.input {
+  width: 100%;
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  font: 400 14px var(--sans);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.textarea {
+  height: auto;
+  padding: 8px 10px;
+  resize: vertical;
+  font-family: inherit;
+  line-height: 1.4;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.field-label {
+  font: 500 12px var(--sans);
+  color: var(--text-muted);
+}
+
+.field-row {
+  display: flex;
+  gap: 10px;
+}
+
+.field-row .field {
+  flex: 1;
+}
+
+.field--narrow {
+  max-width: 110px;
+}
+
+.segmented {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.segmented button {
+  flex: 1;
+  height: 34px;
+  border: 0;
+  background: var(--surface);
+  color: var(--text);
+  font: 500 13px var(--sans);
+  cursor: pointer;
+}
+
+.segmented button.is-active {
+  background: var(--accent);
+  color: #fff;
+}
+
+.coords {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* ---------- Estrellas ---------- */
+
+.stars {
+  position: relative;
+  display: inline-block;
+  white-space: nowrap;
+  line-height: 1;
+  letter-spacing: 1px;
+}
+
+.stars-track {
+  color: #dadce0;
+}
+
+.stars-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  overflow: hidden;
+  color: #f9ab00;
+}
+
+.star-input {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.star-button {
+  border: 0;
+  padding: 0 1px;
+  background: none;
+  color: #dadce0;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.star-button.is-on {
+  color: #f9ab00;
+}
+
+/* ---------- Lista ---------- */
+
+.list-head {
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-bottom: 1px solid var(--border);
+  flex: none;
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.tab {
+  flex: 1;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  font: 500 13px var(--sans);
+  cursor: pointer;
+}
+
+.tab.is-active {
+  background: #e8f0fe;
+  color: var(--accent);
+}
+
+.tab-count {
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+.input--filter {
+  height: 32px;
+  font-size: 13px;
+}
+
+.list-items {
+  margin: 0;
+  padding: 4px 0 8px;
+  list-style: none;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.list-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 14px;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.list-item:hover {
+  background: var(--surface-hover);
+}
+
+.list-badge {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  color: #fff;
+  font: 600 12px var(--sans);
+}
+
+.list-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.list-name {
+  font: 500 14px var(--sans);
+  color: var(--text-strong);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.list-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------- Vistas: mi mapa / guía de Lima ---------- */
+
+.views {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+}
+
+.view-tabs {
+  display: flex;
+  flex: none;
+  border-bottom: 1px solid var(--border);
+}
+
+.view-tab {
+  flex: 1;
+  height: 40px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--text-muted);
+  font: 500 13px var(--sans);
+  cursor: pointer;
+}
+
+.view-tab:hover {
+  background: var(--surface-hover);
+}
+
+.view-tab.is-active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.chips {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: thin;
+}
+
+.chip {
+  flex: none;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  background: var(--surface);
+  color: var(--text);
+  font: 500 12px var(--sans);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.chip:hover {
+  background: var(--surface-hover);
+}
+
+.chip.is-active {
+  background: #e8f0fe;
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.list-badge--rec {
+  background: var(--surface-hover);
+  font-size: 17px;
+}
+
+.list-item.is-active {
+  background: #e8f0fe;
+}
+
+.list-saved {
+  margin-left: 6px;
+  color: #1e8e3e;
+  font-size: 12px;
+}
+
+.rec-card {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 10px 14px 0;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-hover);
+}
+
+.rec-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.rec-name {
+  margin: 0 0 2px;
+  font: 500 16px/1.25 var(--sans);
+  color: var(--text-strong);
+}
+
+.rec-about,
+.rec-dishes {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.rec-approx {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #b06000;
+}
+
+.guide-note {
+  flex: none;
+  margin: 0;
+  padding: 8px 14px 10px;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
+.pin--rec .pin-body {
+  background: #fff;
+  border-color: var(--accent);
+  color: var(--text-strong);
+  font-size: 15px;
+}
+
+.pin--rec {
+  --pin-color: var(--accent);
+  opacity: 0.92;
+}
+
+.empty-state {
+  gap: 12px;
+}
+
+.empty-title {
+  margin: 0;
+  font: 500 15px var(--sans);
+  color: var(--text-strong);
+}
+
+.empty-hint {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-muted);
+  padding: 0 14px;
+}
+
+.panel-body .empty-hint {
+  padding: 0;
+}
+
+/* ---------- Ficha ---------- */
+
+.detail-heading {
+  flex: 1;
+  min-width: 0;
+}
+
+.detail-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+
+.detail-score {
+  font: 600 15px var(--sans);
+  color: var(--text-strong);
+}
+
+.detail-count,
+.badge {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.badge {
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: var(--surface-hover);
+}
+
+.badge--wishlist {
+  background: #fef7e0;
+  color: #b06000;
+}
+
+.detail-line {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.detail-notes {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: var(--surface-hover);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.detail-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.dishes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dish-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dish {
+  display: flex;
+  gap: 10px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.dish--editing {
+  display: block;
+  padding: 12px;
+}
+
+.dish-photo {
+  flex: none;
+  width: 76px;
+  height: 76px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--surface-hover);
+  display: grid;
+  place-items: center;
+  font-size: 26px;
+  cursor: zoom-in;
+}
+
+.dish-photo--empty {
+  cursor: default;
+}
+
+.dish-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.dish-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.dish-title {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.dish-name {
+  font: 500 14px var(--sans);
+  color: var(--text-strong);
+}
+
+.dish-price {
+  font-size: 13px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.dish-notes {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.dish-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 2px;
+}
+
+.dish-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.photo-drop {
+  width: 100%;
+  height: 72px;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  background: var(--surface-hover);
+  color: var(--text-muted);
+  font: 500 13px var(--sans);
+  cursor: pointer;
+}
+
+.photo-drop:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.photo-picker {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.photo-preview {
+  width: 104px;
+  height: 78px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.photo-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.82);
+  cursor: zoom-out;
+}
+
+.lightbox img {
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 8px;
+}
+
+/* ---------- Tarjeta de "sitio marcado" ---------- */
+
+.place-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+}
+
+.place-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.place-name {
+  font: 500 14px var(--sans);
+  color: var(--text-strong);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.place-address {
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.place-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.place-actions .button {
+  flex: 1;
+}
+
+/* ---------- Pines del mapa ---------- */
+
+.pin {
+  --pin-color: #5f6368;
+  position: relative;
+  display: block;
+  padding: 0 0 7px;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  transform-origin: bottom center;
+  transition: transform 120ms ease;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
+}
+
+.pin:hover {
+  transform: scale(1.08);
+  z-index: 4;
+}
+
+.pin.is-selected {
+  transform: scale(1.18);
+  z-index: 5;
+}
+
+.pin-body {
+  display: grid;
+  place-items: center;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 8px;
+  border: 2px solid #fff;
+  border-radius: 99px;
+  background: var(--pin-color);
+  color: #fff;
+  font: 600 12px/1 var(--sans);
+}
+
+.pin::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 8px solid var(--pin-color);
+}
+
+.pin--wishlist .pin-body {
+  background: #fff;
+  border-color: var(--pin-color);
+  border-style: dashed;
+  color: var(--pin-color);
+}
+
+.pin--temp {
+  --pin-color: #1a73e8;
+}
+
+.pin--temp .pin-body {
+  font-size: 18px;
+}
+
+/* ---------- Móvil ---------- */
+
+@media (max-width: 640px) {
+  .panel {
+    top: 8px;
+    left: 8px;
+    width: calc(100vw - 16px);
+    max-height: min(72vh, calc(100% - 16px));
+  }
+
+  .detail-buttons .button {
+    flex: 1;
+  }
+}
