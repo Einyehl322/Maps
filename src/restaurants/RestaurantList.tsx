@@ -1,14 +1,15 @@
 import { useState } from 'react'
-import { Stars } from './Rating'
+import { usePhotoUrl } from './photos'
+import { priceMark } from './price'
 import { useRestaurants } from './restaurantsContext'
-import { averageRating, ratingColor, type Restaurant } from './types'
+import { averageRating, type Restaurant } from './types'
 
 type Filter = 'all' | 'visited' | 'wishlist'
 
 const FILTERS: { id: Filter; label: string }[] = [
   { id: 'all', label: 'Todos' },
-  { id: 'visited', label: 'Visitados' },
-  { id: 'wishlist', label: 'Quiero ir' },
+  { id: 'visited', label: 'Fuimos' },
+  { id: 'wishlist', label: 'Queremos ir' },
 ]
 
 export function RestaurantList({
@@ -49,10 +50,10 @@ export function RestaurantList({
   if (restaurants.length === 0) {
     return (
       <div className="panel-body empty-state">
-        <p className="empty-title">Tu mapa está vacío</p>
+        <p className="empty-title">Su mapa está vacío</p>
         <p className="empty-hint">
-          Busca un sitio arriba, o haz <strong>clic en cualquier punto del mapa</strong>{' '}
-          para guardar un restaurante: los que ya has probado y los que quieres probar.
+          Busca un sitio arriba, o toca <strong>cualquier punto del mapa</strong>{' '}
+          para guardar un lugar: donde ya fueron juntos y donde quieren ir.
         </p>
         <button type="button" className="button button--block button--primary" onClick={onExplore}>
           Ver dónde comer en Lima
@@ -83,11 +84,12 @@ export function RestaurantList({
           ))}
         </div>
         <input
+          type="search"
           className="input input--filter"
           value={term}
           onChange={(event) => setTerm(event.target.value)}
-          placeholder="Filtrar por nombre, cocina o plato"
-          aria-label="Filtrar mis restaurantes"
+          placeholder="Filtrar por nombre, tipo o plato"
+          aria-label="Filtrar nuestros lugares"
         />
       </div>
 
@@ -95,39 +97,60 @@ export function RestaurantList({
         {visible.length === 0 && (
           <li className="empty-hint">Nada coincide con ese filtro.</li>
         )}
-        {visible.map((restaurant) => {
-          const average = averageRating(restaurant)
-          const wishlist = restaurant.status === 'wishlist'
-          return (
-            <li key={restaurant.id}>
-              <button
-                type="button"
-                className="list-item"
-                onClick={() => onSelect(restaurant)}
-              >
-                <span
-                  className="list-badge"
-                  style={{ background: wishlist ? '#5f6368' : ratingColor(average) }}
-                >
-                  {wishlist ? '🔖' : average === null ? '🍽' : average.toFixed(1).replace('.', ',')}
-                </span>
-                <span className="list-text">
-                  <span className="list-name">{restaurant.name}</span>
-                  <span className="list-sub">
-                    {wishlist
-                      ? 'Pendiente de visitar'
-                      : average !== null
-                        ? `${restaurant.dishes.length} ${restaurant.dishes.length === 1 ? 'plato' : 'platos'}`
-                        : 'Visitado'}
-                    {restaurant.cuisine ? ` · ${restaurant.cuisine}` : ''}
-                  </span>
-                  {average !== null && <Stars value={average} size={12} />}
-                </span>
-              </button>
-            </li>
-          )
-        })}
+        {visible.map((restaurant) => (
+          <li key={restaurant.id}>
+            <ListItem restaurant={restaurant} onSelect={onSelect} />
+          </li>
+        ))}
       </ul>
     </div>
   )
+}
+
+function ListItem({
+  restaurant,
+  onSelect,
+}: {
+  restaurant: Restaurant
+  onSelect: (restaurant: Restaurant) => void
+}) {
+  const thumb = usePhotoUrl(restaurant.photoIds?.[0])
+  const average = averageRating(restaurant)
+  const wishlist = restaurant.status === 'wishlist'
+  const visitedOn = shortDay(restaurant.visitedAt)
+
+  const sub = [
+    wishlist ? 'Pendiente' : visitedOn ? `Fuimos el ${visitedOn}` : 'Fuimos',
+    restaurant.cuisine,
+    restaurant.priceLevel && priceMark(restaurant.priceLevel),
+  ].filter(Boolean)
+
+  return (
+    <button type="button" className="list-item" onClick={() => onSelect(restaurant)}>
+      <span
+        className={`list-thumb${wishlist ? ' list-thumb--wish' : ''}`}
+        style={thumb ? { backgroundImage: `url("${thumb}")` } : undefined}
+        aria-hidden="true"
+      >
+        {!thumb && (wishlist ? '🔖' : '♥')}
+      </span>
+      <span className="list-text">
+        <span className="list-name">{restaurant.name}</span>
+        <span className="list-sub">{sub.join(' · ')}</span>
+      </span>
+      {average !== null && (
+        <span className="list-score">
+          ★ {average.toFixed(1)}
+        </span>
+      )}
+    </button>
+  )
+}
+
+/** "12 jul" a partir de `yyyy-mm-dd`. */
+function shortDay(value?: string): string | null {
+  const match = value && /^(\d{4})-(\d{2})-(\d{2})/.exec(value)
+  if (!match) return null
+  return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]))
+    .toLocaleDateString('es-PE', { day: 'numeric', month: 'short' })
 }

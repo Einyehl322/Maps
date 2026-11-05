@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { storePhoto, usePhotoUrl } from './photos'
+import { removePhotos, storePhoto, usePhotoUrl } from './photos'
 import { StarInput } from './Rating'
-import { deletePhoto } from './storage'
 import { useRestaurants } from './restaurantsContext'
 import { newId, type Dish } from './types'
 
@@ -48,8 +47,6 @@ export function DishForm({
     try {
       let photoId = photoRemoved ? undefined : dish?.photoId
       if (file) photoId = await storePhoto(file)
-      // La foto anterior ya no la referencia nadie.
-      if (dish?.photoId && dish.photoId !== photoId) await deletePhoto(dish.photoId)
       const parsedPrice = Number.parseFloat(price.replace(',', '.'))
       const next: Dish = {
         id: dish?.id ?? newId(),
@@ -61,6 +58,8 @@ export function DishForm({
         createdAt: dish?.createdAt ?? new Date().toISOString(),
       }
       await upsertDish(restaurantId, next)
+      // La foto anterior ya no la referencia nadie.
+      if (dish?.photoId && dish.photoId !== photoId) await removePhotos([dish.photoId])
       onDone()
     } finally {
       setSaving(false)
@@ -75,7 +74,7 @@ export function DishForm({
           className="input"
           value={name}
           onChange={(event) => setName(event.target.value)}
-          placeholder="Ej. Croquetas de jamón"
+          placeholder="Ej. Lomo saltado"
           autoFocus
           required
         />
@@ -87,13 +86,13 @@ export function DishForm({
           <StarInput value={rating} onChange={setRating} />
         </div>
         <label className="field field--narrow">
-          <span className="field-label">Precio (€)</span>
+          <span className="field-label">Precio (S/)</span>
           <input
             className="input"
             inputMode="decimal"
             value={price}
             onChange={(event) => setPrice(event.target.value)}
-            placeholder="12,50"
+            placeholder="35.00"
           />
         </label>
       </div>

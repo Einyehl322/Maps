@@ -8,6 +8,8 @@
  * Los precios son orientativos por persona (soles) y cambian; la carta manda.
  */
 
+import type { PriceLevel } from './price'
+
 export type RecCategory =
   | 'cevicheria'
   | 'sanguche'
@@ -55,25 +57,15 @@ export type Recommendation = {
   /** El pin cae en la calle, no en la puerta: OSM no tiene el local. */
   approx?: boolean
   /** 1 = barato · 2 = medio · 3 = caro · 4 = menú degustación. */
-  price: 1 | 2 | 3 | 4
+  price: PriceLevel
   /** Por qué merece la pena. */
   about: string
   /** Qué pedir. */
   dishes: string[]
 }
 
-/** Orientativo por persona, sin bebida. En Perú se paga en soles (S/). */
-export const PRICE_LABELS: Record<Recommendation['price'], string> = {
-  1: 'menos de S/ 30',
-  2: 'S/ 30 a 70',
-  3: 'S/ 70 a 150',
-  4: 'menú degustación, S/ 150+',
-}
-
-/** "S/", "S/S/"… para la lista compacta. */
-export function priceMark(price: Recommendation['price']): string {
-  return 'S/'.repeat(price)
-}
+// Los rangos de precio se comparten con los lugares guardados.
+export { PRICE_LABELS, priceMark } from './price'
 
 /** Centro de Lima metropolitana (Plaza San Martín, más o menos). */
 export const LIMA_CENTER: [number, number] = [-77.0345, -12.0553]
@@ -374,6 +366,19 @@ export const LIMA_RECOMMENDATIONS: Recommendation[] = [
     about:
       'Casona republicana con patio, a un paso del Museo Larco. El bufé criollo de domingo es una institución familiar.',
     dishes: ['Bufé criollo (domingos)', 'Chicharrón', 'Chilcano de pisco'],
+  },
+  {
+    id: 'museo-larco-cafe',
+    name: 'Museo Larco Café Restaurant',
+    category: 'criollo',
+    district: 'Pueblo Libre',
+    address: 'Av. Simón Bolívar 1515',
+    lng: -77.07076,
+    lat: -12.07227,
+    price: 3,
+    about:
+      'El restaurante del Museo Larco, en una terraza entre los jardines de buganvillas del museo. Cocina peruana; perfecto para comer después de la visita.',
+    dishes: ['Cocina peruana de la carta', 'Postres', 'Pisco sour'],
   },
   {
     id: 'huaca-pucllana',

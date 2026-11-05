@@ -43,6 +43,7 @@ export function DEMO_RESTAURANTS(): Restaurant[] {
       status: dishes.length ? 'visited' : 'wishlist',
       address: `${rec.address}, ${rec.district}`,
       cuisine: categoryOf(rec.category).cuisine,
+      priceLevel: rec.price,
       lng: rec.lng,
       lat: rec.lat,
       visitedAt: dishes.length ? '2026-07-12' : undefined,

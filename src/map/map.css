@@ -6,6 +6,8 @@
 .map-canvas {
   position: absolute;
   inset: 0;
+  /* Contexto propio: ningún pin (ni el seleccionado) se pinta sobre el panel. */
+  z-index: 0;
 }
 
 /* Capa de UI sobre el mapa: solo los controles capturan el ratón. */
@@ -290,7 +292,7 @@
 }
 
 .osm-status.is-error {
-  color: #d93025;
+  color: var(--danger);
 }
 
 .osm-legend {

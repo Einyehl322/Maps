@@ -1,6 +1,7 @@
 import type { Point } from 'geojson'
 import type { GeoJSONSource, MapMouseEvent } from 'maplibre-gl'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useAccount } from '../auth/accountContext'
 import { BasemapSwitcher } from '../map/BasemapSwitcher'
 import { useMap } from '../map/mapContext'
 import { SearchBox } from '../map/SearchBox'
@@ -22,14 +23,17 @@ import {
 import { LIMA_RECOMMENDATIONS } from '../restaurants/lima'
 import { RecommendationMarkers } from '../restaurants/RecommendationMarkers'
 import { Recommendations } from '../restaurants/Recommendations'
+import { Diary } from '../restaurants/Diary'
 import { RestaurantDetail } from '../restaurants/RestaurantDetail'
 import { RestaurantForm } from '../restaurants/RestaurantForm'
 import { RestaurantList } from '../restaurants/RestaurantList'
 import { RestaurantMarkers } from '../restaurants/RestaurantMarkers'
+import { formatSoles, spendingOf } from '../restaurants/price'
 import { useRestaurants } from '../restaurants/restaurantsContext'
 import type { Restaurant } from '../restaurants/types'
 import { TempMarker } from './TempMarker'
 import './app.css'
+import { today } from '../lib/dates'
 
 type Place = {
   lng: number
@@ -37,6 +41,9 @@ type Place = {
   name: string
   address: string
   loading: boolean
+  /** Si salió de la búsqueda de locales de OpenStreetMap. */
+  osmId?: string
+  cuisine?: string
 }
 
 /** Dos vistas en el panel: lo tuyo y la guía de Lima. */
@@ -48,20 +55,17 @@ function loadOsmEnabled(): boolean {
   return localStorage.getItem(OSM_KEY) !== 'off'
 }
 
-/** Fecha de hoy en formato `yyyy-mm-dd`, que es lo que espera `<input type="date">`. */
-function today(): string {
-  return new Date().toISOString().slice(0, 10)
-}
-
 export function AppShell() {
   const { map } = useMap()
-  const { restaurants } = useRestaurants()
+  const { restaurants, error } = useRestaurants()
+  const account = useAccount()
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [draft, setDraft] = useState<RestaurantDraft | null>(null)
   const [place, setPlace] = useState<Place | null>(null)
   const [view, setView] = useState<View>('mine')
   const [recId, setRecId] = useState<string | null>(null)
   const [osmEnabled, setOsmEnabled] = useState(loadOsmEnabled)
+  const [diaryOpen, setDiaryOpen] = useState(false)
 
   const { places: osmPlaces, status: osmStatus } = useOsmPlaces(map, osmEnabled)
 
@@ -154,6 +158,7 @@ export function AppShell() {
             name: String(props.name ?? ''),
             address: String(props.address ?? ''),
             cuisine: String(props.cuisine ?? ''),
+            website: String(props.website ?? ''),
             status: 'wishlist',
             visitedAt: today(),
           }),
@@ -217,8 +222,14 @@ export function AppShell() {
       )
     }
 
+    // El diario se abre tocando el corazón de la cabecera: no tiene botón visible.
+    if (diaryOpen) {
+      return <Diary onClose={() => setDiaryOpen(false)} onSelect={focus} />
+    }
+
     return (
       <div className="views">
+        <Brand restaurants={restaurants} onOpenDiary={() => setDiaryOpen(true)} />
         <div className="view-tabs" role="tablist">
           <button
             type="button"
@@ -227,7 +238,7 @@ export function AppShell() {
             className={`view-tab${view === 'mine' ? ' is-active' : ''}`}
             onClick={() => setView('mine')}
           >
-            Mi mapa
+            Nuestro mapa
           </button>
           <button
             type="button"
@@ -304,8 +315,10 @@ export function AppShell() {
               lng: result.center[0],
               lat: result.center[1],
               name: result.name,
-              address: result.detail,
+              address: result.osmId ? (result.address ?? '') : result.detail,
               loading: false,
+              osmId: result.osmId,
+              cuisine: result.cuisine,
             })
           }}
         />
@@ -319,7 +332,7 @@ export function AppShell() {
                   : place.name || 'Punto sin nombre'}
               </strong>
               <span className="place-address">
-                {place.address ||
+                {[place.cuisine, place.address].filter(Boolean).join(' · ') ||
                   `${place.lat.toFixed(5)}, ${place.lng.toFixed(5)}`}
               </span>
             </div>
@@ -332,13 +345,15 @@ export function AppShell() {
                     emptyDraft(place.lng, place.lat, {
                       name: place.name,
                       address: place.address,
+                      osmId: place.osmId,
+                      cuisine: place.cuisine ?? '',
                       status: 'visited',
-                      visitedAt: new Date().toISOString().slice(0, 10),
+                      visitedAt: today(),
                     }),
                   )
                 }
               >
-                Ya he ido
+                Ya fuimos
               </button>
               <button
                 type="button"
@@ -348,12 +363,14 @@ export function AppShell() {
                     emptyDraft(place.lng, place.lat, {
                       name: place.name,
                       address: place.address,
+                      osmId: place.osmId,
+                      cuisine: place.cuisine ?? '',
                       status: 'wishlist',
                     }),
                   )
                 }
               >
-                Quiero ir
+                Queremos ir
               </button>
               <button
                 type="button"
@@ -367,7 +384,23 @@ export function AppShell() {
           </div>
         )}
 
-        <div className="panel-card panel-main">{panel()}</div>
+        {error && (
+          <div className="panel-error" role="alert">
+            {error}
+          </div>
+        )}
+
+        <div className="panel-card panel-main">
+          {panel()}
+          {account && !draft && !selected && (
+            <div className="account-bar">
+              <span>Conectado como {account.email}</span>
+              <button type="button" className="link-button" onClick={account.signOut}>
+                Salir
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       <OsmControl
@@ -379,5 +412,40 @@ export function AppShell() {
 
       <BasemapSwitcher />
     </>
+  )
+}
+
+function Brand({
+  restaurants,
+  onOpenDiary,
+}: {
+  restaurants: Restaurant[]
+  onOpenDiary: () => void
+}) {
+  const visited = restaurants.filter((item) => item.status === 'visited').length
+  const spent = spendingOf(restaurants.flatMap((item) => item.dishes)).total
+  const photos = restaurants.reduce((sum, item) => sum + (item.photoIds?.length ?? 0), 0)
+
+  const facts = [
+    `${visited} ${visited === 1 ? 'lugar juntos' : 'lugares juntos'}`,
+    photos > 0 && `${photos} ${photos === 1 ? 'foto' : 'fotos'}`,
+    spent > 0 && `${formatSoles(spent, true)} en comida`,
+  ].filter(Boolean)
+
+  return (
+    <header className="brand">
+      <button
+        type="button"
+        className="brand-mark"
+        onClick={onOpenDiary}
+        aria-label="Abrir nuestro diario"
+      >
+        ♥
+      </button>
+      <div className="brand-text">
+        <h1>Nuestros lugares</h1>
+        <p>{restaurants.length === 0 ? 'Nuestro mapa de Lima' : facts.join(' · ')}</p>
+      </div>
+    </header>
   )
 }

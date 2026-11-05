@@ -1,19 +1,35 @@
 :root {
-  --sans: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --sans: 'Manrope', system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --serif: 'Fraunces', Georgia, 'Times New Roman', serif;
 
-  --surface: #fff;
-  --surface-hover: #f1f3f4;
-  --text: #3c4043;
-  --text-strong: #202124;
-  --text-muted: #70757a;
-  --border: #dadce0;
-  --accent: #1a73e8;
+  /* Papel cálido, tinta marrón y un rosa como acento. */
+  --surface: #fffdfa;
+  --surface-hover: #f8f0e9;
+  --surface-sunken: #f5ede6;
+  --text: #4a3f3b;
+  --text-strong: #241a17;
+  --text-muted: #8a7b74;
+  --border: #ece1d8;
 
-  --shadow-1: 0 1px 2px rgba(60, 64, 67, 0.3);
+  --accent: #d6455d;
+  --accent-hover: #bd3850;
+  --accent-soft: #fde9ed;
+  --accent-ink: #a72c43;
+
+  --wish: #c27c14;
+  --wish-soft: #fdf1dc;
+  --danger: #c5221f;
+  --ok: #2f7d4f;
+
+  --radius-sm: 8px;
+  --radius: 12px;
+  --radius-lg: 18px;
+
+  --shadow-1: 0 1px 2px rgba(70, 40, 30, 0.12);
   --shadow-2:
-    0 1px 2px rgba(60, 64, 67, 0.3), 0 2px 6px 2px rgba(60, 64, 67, 0.15);
+    0 1px 2px rgba(70, 40, 30, 0.1), 0 6px 18px -4px rgba(70, 40, 30, 0.18);
   --shadow-3:
-    0 1px 3px rgba(60, 64, 67, 0.3), 0 4px 8px 3px rgba(60, 64, 67, 0.15);
+    0 2px 4px rgba(70, 40, 30, 0.1), 0 14px 34px -8px rgba(70, 40, 30, 0.28);
 
   color-scheme: light;
   font: 400 15px/1.4 var(--sans);
@@ -35,7 +51,7 @@ body,
 body {
   margin: 0;
   overflow: hidden;
-  background: #e8eaed;
+  background: #efe6dd;
   overscroll-behavior: none;
 }
 

@@ -1,76 +1,56 @@
+import { supabase } from '../lib/supabase'
+import { createCloudStore } from './cloudStore'
+import * as local from './localStore'
+import type { Activity } from './activity'
 import type { Restaurant } from './types'
 
 /**
- * Persistencia en IndexedDB: los restaurantes en un almacén y las fotos
- * (Blobs, demasiado grandes para localStorage) en otro.
+ * Punto único de persistencia. Con Supabase configurado todo va a la nube
+ * (compartido entre los dos); sin él, a IndexedDB en este navegador.
  */
 
-const DB_NAME = 'mis-restaurantes'
-const DB_VERSION = 1
-const RESTAURANTS = 'restaurants'
-const PHOTOS = 'photos'
+export type PhotoHandle = { url: string; release: () => void }
 
-let dbPromise: Promise<IDBDatabase> | null = null
-
-function openDb(): Promise<IDBDatabase> {
-  dbPromise ??= new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION)
-    request.onupgradeneeded = () => {
-      const db = request.result
-      if (!db.objectStoreNames.contains(RESTAURANTS)) {
-        db.createObjectStore(RESTAURANTS, { keyPath: 'id' })
-      }
-      if (!db.objectStoreNames.contains(PHOTOS)) {
-        db.createObjectStore(PHOTOS)
-      }
-    }
-    request.onsuccess = () => resolve(request.result)
-    request.onerror = () => reject(request.error)
-  })
-  return dbPromise
+type Store = {
+  loadRestaurants: () => Promise<Restaurant[]>
+  saveRestaurant: (restaurant: Restaurant) => Promise<void>
+  deleteRestaurant: (id: string) => Promise<void>
+  savePhoto: (id: string, blob: Blob) => Promise<void>
+  deletePhotos: (ids: string[]) => Promise<void>
+  photoUrl: (id: string) => Promise<PhotoHandle | null>
+  saveActivity: (events: Activity[]) => Promise<void>
+  loadActivity: () => Promise<Activity[]>
+  memberNames: () => Promise<Record<string, string>>
 }
 
-function promisify<T>(request: IDBRequest<T>): Promise<T> {
-  return new Promise((resolve, reject) => {
-    request.onsuccess = () => resolve(request.result)
-    request.onerror = () => reject(request.error)
-  })
+const localStore: Store = {
+  loadRestaurants: local.loadRestaurants,
+  saveRestaurant: local.saveRestaurant,
+  deleteRestaurant: local.deleteRestaurant,
+  savePhoto: local.savePhoto,
+  saveActivity: local.saveActivity,
+  loadActivity: local.loadActivity,
+  memberNames: async () => ({}),
+  deletePhotos: async (ids) => {
+    await Promise.all(ids.map((id) => local.deletePhoto(id)))
+  },
+  photoUrl: async (id) => {
+    const blob = await local.loadPhoto(id)
+    if (!blob) return null
+    const url = URL.createObjectURL(blob)
+    return { url, release: () => URL.revokeObjectURL(url) }
+  },
 }
 
-async function withStore<T>(
-  store: string,
-  mode: IDBTransactionMode,
-  run: (store: IDBObjectStore) => IDBRequest<T>,
-): Promise<T> {
-  const db = await openDb()
-  const transaction = db.transaction(store, mode)
-  const result = await promisify(run(transaction.objectStore(store)))
-  return result
+function cloudStore(): Store {
+  const cloud = createCloudStore(supabase!)
+  return {
+    ...cloud,
+    photoUrl: async (id) => {
+      const url = await cloud.photoUrl(id)
+      return url ? { url, release: () => {} } : null
+    },
+  }
 }
 
-export async function loadRestaurants(): Promise<Restaurant[]> {
-  const all = await withStore<Restaurant[]>(RESTAURANTS, 'readonly', (store) =>
-    store.getAll(),
-  )
-  return all.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
-}
-
-export async function saveRestaurant(restaurant: Restaurant): Promise<void> {
-  await withStore(RESTAURANTS, 'readwrite', (store) => store.put(restaurant))
-}
-
-export async function deleteRestaurant(id: string): Promise<void> {
-  await withStore(RESTAURANTS, 'readwrite', (store) => store.delete(id))
-}
-
-export async function savePhoto(id: string, blob: Blob): Promise<void> {
-  await withStore(PHOTOS, 'readwrite', (store) => store.put(blob, id))
-}
-
-export async function loadPhoto(id: string): Promise<Blob | undefined> {
-  return withStore<Blob | undefined>(PHOTOS, 'readonly', (store) => store.get(id))
-}
-
-export async function deletePhoto(id: string): Promise<void> {
-  await withStore(PHOTOS, 'readwrite', (store) => store.delete(id))
-}
+export const store: Store = supabase ? cloudStore() : localStore

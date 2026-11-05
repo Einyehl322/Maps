@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react'
-import { loadPhoto, savePhoto } from './storage'
+import { isCloud } from '../lib/supabase'
+import { store, type PhotoHandle } from './storage'
 import { newId } from './types'
 
-const MAX_SIDE = 1400
+const MAX_SIDE = 1600
 const QUALITY = 0.82
 
 /**
  * Redimensiona la foto antes de guardarla: las fotos de móvil pesan varios MB
- * y en el navegador no hay espacio infinito.
+ * y así se suben rápido y ocupan poco.
  */
 async function shrink(file: File): Promise<Blob> {
   try {
@@ -37,35 +38,61 @@ async function shrink(file: File): Promise<Blob> {
 /** Guarda una foto y devuelve su identificador. */
 export async function storePhoto(file: File): Promise<string> {
   const id = newId()
-  await savePhoto(id, await shrink(file))
+  await store.savePhoto(id, await shrink(file))
   return id
 }
 
-/** URL temporal para mostrar una foto guardada. Se libera al desmontar. */
+/**
+ * Caché de URLs: el pin, la lista y la galería piden la misma foto y así
+ * solo se resuelve una vez. En Supabase la URL firmada dura una hora, así que
+ * se renueva antes de que caduque.
+ */
+const TTL = 45 * 60 * 1000
+const cache = new Map<string, { handle: Promise<PhotoHandle | null>; at: number }>()
+
+export function photoUrl(id: string): Promise<string | null> {
+  const hit = cache.get(id)
+  // En local la URL es un blob: que no caduca; solo las firmadas se renuevan.
+  if (hit && (!isCloud || Date.now() - hit.at < TTL)) {
+    return hit.handle.then((h) => h?.url ?? null)
+  }
+  const handle = store.photoUrl(id).catch(() => null)
+  cache.set(id, { handle, at: Date.now() })
+  return handle.then((h) => h?.url ?? null)
+}
+
+function evict(id: string) {
+  const hit = cache.get(id)
+  if (!hit) return
+  cache.delete(id)
+  void hit.handle.then((h) => h?.release())
+}
+
+export async function removePhotos(ids: (string | undefined)[]): Promise<void> {
+  const present = ids.filter((id): id is string => Boolean(id))
+  if (!present.length) return
+  present.forEach(evict)
+  try {
+    await store.deletePhotos(present)
+  } catch {
+    // Una foto huérfana no debe impedir borrar lo demás.
+  }
+}
+
+/** URL para mostrar una foto guardada (o `null` mientras carga). */
 export function usePhotoUrl(photoId: string | undefined): string | null {
-  const [url, setUrl] = useState<string | null>(null)
+  const [state, setState] = useState<{ id: string; url: string } | null>(null)
 
   useEffect(() => {
-    if (!photoId) {
-      setUrl(null)
-      return
-    }
-
+    if (!photoId) return
     let cancelled = false
-    let objectUrl: string | null = null
-
-    void loadPhoto(photoId).then((blob) => {
-      if (cancelled || !blob) return
-      objectUrl = URL.createObjectURL(blob)
-      setUrl(objectUrl)
+    void photoUrl(photoId).then((url) => {
+      if (!cancelled && url) setState({ id: photoId, url })
     })
-
     return () => {
       cancelled = true
-      if (objectUrl) URL.revokeObjectURL(objectUrl)
-      setUrl(null)
     }
   }, [photoId])
 
-  return url
+  return state && state.id === photoId ? state.url : null
 }

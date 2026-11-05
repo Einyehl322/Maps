@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react'
+import { useAccount } from '../auth/accountContext'
+import { normalizeUrl } from '../osm/details'
 import type { RestaurantDraft } from './draft'
+import { PRICE_LABELS, PRICE_LEVELS, priceMark } from './price'
 import { useRestaurants } from './restaurantsContext'
 import { newId, type Restaurant } from './types'
 
@@ -22,6 +25,7 @@ export function RestaurantForm({
   onSaved: (restaurant: Restaurant) => void
 }) {
   const { upsertRestaurant } = useRestaurants()
+  const account = useAccount()
   const [values, setValues] = useState(draft)
   const [saving, setSaving] = useState(false)
 
@@ -56,6 +60,9 @@ export function RestaurantForm({
         cuisine: values.cuisine.trim() || undefined,
         visitedAt: values.status === 'visited' ? values.visitedAt || undefined : undefined,
         notes: values.notes.trim() || undefined,
+        priceLevel: values.priceLevel ?? undefined,
+        website: normalizeUrl(values.website),
+        ...messageFields(values.message, draft.message, account?.email),
         lng: values.lng,
         lat: values.lat,
       })
@@ -68,7 +75,7 @@ export function RestaurantForm({
   return (
     <form className="form" onSubmit={submit}>
       <header className="panel-header">
-        <h2>{values.id ? 'Editar restaurante' : 'Nuevo restaurante'}</h2>
+        <h2>{values.id ? 'Editar lugar' : 'Nuevo lugar'}</h2>
         <button type="button" className="icon-button" onClick={onCancel} aria-label="Cerrar">
           ✕
         </button>
@@ -81,7 +88,7 @@ export function RestaurantForm({
             className="input"
             value={values.name}
             onChange={(event) => set('name', event.target.value)}
-            placeholder="Ej. Casa Julio"
+            placeholder="Ej. La Mar, Parque Kennedy…"
             autoFocus
             required
           />
@@ -93,16 +100,30 @@ export function RestaurantForm({
             className={values.status === 'visited' ? 'is-active' : ''}
             onClick={() => set('status', 'visited')}
           >
-            Ya he ido
+            Ya fuimos
           </button>
           <button
             type="button"
             className={values.status === 'wishlist' ? 'is-active' : ''}
             onClick={() => set('status', 'wishlist')}
           >
-            Quiero ir
+            Queremos ir
           </button>
         </div>
+
+        {values.status === 'wishlist' && (
+          <label className="field field--love">
+            <span className="field-label">💌 Mensaje (opcional)</span>
+            <textarea
+              className="input textarea"
+              rows={2}
+              value={values.message}
+              onChange={(event) => set('message', event.target.value)}
+              placeholder="¿Vamos el sábado? Dicen que el ceviche es buenazo…"
+              maxLength={500}
+            />
+          </label>
+        )}
 
         <label className="field">
           <span className="field-label">Dirección</span>
@@ -116,12 +137,12 @@ export function RestaurantForm({
 
         <div className="field-row">
           <label className="field">
-            <span className="field-label">Tipo de cocina</span>
+            <span className="field-label">Tipo de lugar</span>
             <input
               className="input"
               value={values.cuisine}
               onChange={(event) => set('cuisine', event.target.value)}
-              placeholder="Japonesa, tapas…"
+              placeholder="Cevichería, café, mirador…"
             />
           </label>
 
@@ -138,6 +159,47 @@ export function RestaurantForm({
           )}
         </div>
 
+        <div className="field">
+          <span className="field-label">
+            Precio por persona
+            {values.priceLevel && (
+              <span className="field-hint"> · {PRICE_LABELS[values.priceLevel]}</span>
+            )}
+          </span>
+          <div className="segmented" role="group" aria-label="Precio por persona">
+            <button
+              type="button"
+              className={values.priceLevel === null ? 'is-active' : ''}
+              onClick={() => set('priceLevel', null)}
+            >
+              ?
+            </button>
+            {PRICE_LEVELS.map((level) => (
+              <button
+                key={level}
+                type="button"
+                className={values.priceLevel === level ? 'is-active' : ''}
+                onClick={() => set('priceLevel', level)}
+                title={PRICE_LABELS[level]}
+              >
+                {priceMark(level)}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <label className="field">
+          <span className="field-label">Link (web, Instagram o carta)</span>
+          <input
+            className="input"
+            type="url"
+            inputMode="url"
+            value={values.website}
+            onChange={(event) => set('website', event.target.value)}
+            placeholder="instagram.com/turestaurante"
+          />
+        </label>
+
         <label className="field">
           <span className="field-label">Notas</span>
           <textarea
@@ -145,7 +207,7 @@ export function RestaurantForm({
             rows={3}
             value={values.notes}
             onChange={(event) => set('notes', event.target.value)}
-            placeholder="Reservar con antelación, pedir la mesa del fondo…"
+            placeholder="Qué hicimos, qué nos gustó, para recordar…"
           />
         </label>
 
@@ -165,4 +227,15 @@ export function RestaurantForm({
       </footer>
     </form>
   )
+}
+
+/** El autor solo cambia si cambia el mensaje: editar otra cosa no lo "firma". */
+function messageFields(
+  next: string,
+  previous: string,
+  email: string | undefined,
+): { message?: string; messageFrom?: string } | Record<string, never> {
+  const message = next.trim()
+  if (message === previous.trim()) return {}
+  return { message: message || undefined, messageFrom: message ? email : undefined }
 }

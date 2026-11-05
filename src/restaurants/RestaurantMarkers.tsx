@@ -1,7 +1,8 @@
 import { Marker } from 'maplibre-gl'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMap } from '../map/mapContext'
-import { averageRating, ratingColor, type Restaurant } from './types'
+import { photoUrl } from './photos'
+import { averageRating, type Restaurant } from './types'
 
 /**
  * Por debajo de esta cantidad se pintan todos: son marcadores DOM y con pocos
@@ -13,17 +14,17 @@ const CULL_FROM = 120
 const PADDING = 0.25
 
 function formatScore(value: number): string {
-  return value.toFixed(1).replace('.', ',')
+  return value.toFixed(1)
 }
 
 function createPin(restaurant: Restaurant): HTMLButtonElement {
   const average = averageRating(restaurant)
   const wishlist = restaurant.status === 'wishlist'
+  const cover = wishlist ? undefined : restaurant.photoIds?.[0]
 
   const element = document.createElement('button')
   element.type = 'button'
   element.className = `pin${wishlist ? ' pin--wishlist' : ''}`
-  element.style.setProperty('--pin-color', wishlist ? '#5f6368' : ratingColor(average))
   element.title = restaurant.name
   element.setAttribute(
     'aria-label',
@@ -32,10 +33,27 @@ function createPin(restaurant: Restaurant): HTMLButtonElement {
       : `${restaurant.name}${average === null ? '' : `, ${formatScore(average)} de 5`}`,
   )
 
+  if (cover) {
+    // Con foto: el pin es la foto, y la nota va en una etiqueta.
+    const photo = document.createElement('span')
+    photo.className = 'pin-photo'
+    element.append(photo)
+    void photoUrl(cover).then((url) => {
+      if (url) photo.style.backgroundImage = `url("${url}")`
+    })
+    if (average !== null) {
+      const score = document.createElement('span')
+      score.className = 'pin-score'
+      score.textContent = formatScore(average)
+      element.append(score)
+    }
+    return element
+  }
+
   const body = document.createElement('span')
   body.className = 'pin-body'
   if (wishlist) body.textContent = '🔖'
-  else if (average === null) body.textContent = '🍽'
+  else if (average === null) body.textContent = '♥'
   else body.textContent = formatScore(average)
   element.append(body)
 

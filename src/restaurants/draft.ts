@@ -1,3 +1,4 @@
+import type { PriceLevel } from './price'
 import type { Restaurant, RestaurantStatus } from './types'
 
 /** Valores del formulario de restaurante (todo string para los inputs). */
@@ -11,6 +12,9 @@ export type RestaurantDraft = {
   cuisine: string
   visitedAt: string
   notes: string
+  message: string
+  website: string
+  priceLevel: PriceLevel | null
   lng: number
   lat: number
 }
@@ -25,6 +29,9 @@ export function draftFromRestaurant(restaurant: Restaurant): RestaurantDraft {
     cuisine: restaurant.cuisine ?? '',
     visitedAt: restaurant.visitedAt ?? '',
     notes: restaurant.notes ?? '',
+    message: restaurant.message ?? '',
+    website: restaurant.website ?? '',
+    priceLevel: restaurant.priceLevel ?? null,
     lng: restaurant.lng,
     lat: restaurant.lat,
   }
@@ -42,6 +49,9 @@ export function emptyDraft(
     cuisine: '',
     visitedAt: '',
     notes: '',
+    message: '',
+    website: '',
+    priceLevel: null,
     lng,
     lat,
     ...values,

@@ -1,3 +1,5 @@
+import type { PriceLevel, Quote } from './price'
+
 export type Dish = {
   id: string
   name: string
@@ -10,7 +12,7 @@ export type Dish = {
   createdAt: string
 }
 
-/** `wishlist` = sitio que quiero probar; `visited` = ya he ido y puedo puntuar platos. */
+/** `wishlist` = lugar al que queremos ir; `visited` = ya fuimos y podemos puntuar platos. */
 export type RestaurantStatus = 'visited' | 'wishlist'
 
 export type Restaurant = {
@@ -27,6 +29,17 @@ export type Restaurant = {
   recId?: string
   /** Si vino de la capa de OpenStreetMap, su identificador ("node/123"). */
   osmId?: string
+  /** Fotos del lugar (no de un plato concreto), en orden de subida. */
+  photoIds?: string[]
+  /** Mensaje al marcarlo como "queremos ir" (💌) y de quién es. */
+  message?: string
+  messageFrom?: string
+  /** Web, Instagram o carta del local, apuntado a mano. */
+  website?: string
+  /** Rango de precio por persona (ver `price.ts`). */
+  priceLevel?: PriceLevel
+  /** Cotización de una salida a este lugar. */
+  quote?: Quote
   dishes: Dish[]
   createdAt: string
   updatedAt: string

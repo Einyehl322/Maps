@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { Map as MapLibreMap } from 'maplibre-gl'
+import { searchFood } from './photon'
 
 export type GeoResult = {
   id: string
@@ -11,6 +12,11 @@ export type GeoResult = {
   /** [oeste, sur, este, norte] */
   bbox?: [number, number, number, number]
   category?: string
+  /** Si es un local de OpenStreetMap: "node/123". */
+  osmId?: string
+  cuisine?: string
+  /** Solo la dirección, sin el tipo de local. */
+  address?: string
 }
 
 type NominatimItem = {
@@ -140,7 +146,7 @@ export function useGeocoder(query: string, map: MapLibreMap | null) {
     const controller = new AbortController()
     setLoading(true)
 
-    const timer = setTimeout(async () => {
+    const timer = setTimeout(() => {
       const params = new URLSearchParams({
         format: 'jsonv2',
         q: term,
@@ -162,30 +168,56 @@ export function useGeocoder(query: string, map: MapLibreMap | null) {
         )
       }
 
-      try {
-        const response = await fetch(`${ENDPOINT}?${params}`, {
-          signal: controller.signal,
-          headers: { Accept: 'application/json' },
-        })
-        if (!response.ok) throw new Error(`HTTP ${response.status}`)
-        const data: NominatimItem[] = await response.json()
-        // Locales primero, respetando el orden de relevancia dentro de cada grupo.
-        const ranked = [...data.filter(isFood), ...data.filter((item) => !isFood(item))]
-        setResults(
-          ranked
-            .map(toResult)
-            .filter((r): r is GeoResult => r !== null)
-            .slice(0, 6),
-        )
-        setError(null)
-      } catch (err) {
-        if (controller.signal.aborted) return
-        setResults([])
-        setError('No se pudo buscar. Revisa tu conexión.')
-        void err
-      } finally {
-        if (!controller.signal.aborted) setLoading(false)
+      // Dos fuentes en paralelo: Nominatim (direcciones, barrios, lugares) y
+      // Photon (locales de comida por nombre en toda Lima). Se muestra lo
+      // primero que llegue y se completa con lo otro.
+      let places: GeoResult[] = []
+      let food: GeoResult[] = []
+      let pending = 2
+      let failed = 0
+
+      const publish = () => {
+        // Un local que salga en ambas fuentes se queda con la versión de Photon.
+        const seen = new Set(food.map((item) => item.name.toLowerCase()))
+        const merged = [
+          ...food,
+          ...places.filter((item) => !seen.has(item.name.toLowerCase())),
+        ]
+        setResults(merged.slice(0, 8))
       }
+
+      const settle = (ok: boolean) => {
+        if (controller.signal.aborted) return
+        pending -= 1
+        if (!ok) failed += 1
+        if (pending === 0) {
+          setLoading(false)
+          setError(failed === 2 ? 'No se pudo buscar. Revisa tu conexión.' : null)
+        }
+      }
+
+      void fetch(`${ENDPOINT}?${params}`, {
+        signal: controller.signal,
+        headers: { Accept: 'application/json' },
+      })
+        .then(async (response) => {
+          if (!response.ok) throw new Error(`HTTP ${response.status}`)
+          const data: NominatimItem[] = await response.json()
+          // Locales primero, respetando el orden de relevancia dentro de cada grupo.
+          const ranked = [...data.filter(isFood), ...data.filter((item) => !isFood(item))]
+          places = ranked.map(toResult).filter((r): r is GeoResult => r !== null)
+          if (!controller.signal.aborted) publish()
+          settle(true)
+        })
+        .catch(() => settle(false))
+
+      void searchFood(term, map ? map.getCenter() : null, controller.signal)
+        .then((found) => {
+          food = found
+          if (!controller.signal.aborted) publish()
+          settle(true)
+        })
+        .catch(() => settle(false))
     }, DEBOUNCE_MS)
 
     return () => {
@@ -196,3 +228,4 @@ export function useGeocoder(query: string, map: MapLibreMap | null) {
 
   return { results, loading, error }
 }
+

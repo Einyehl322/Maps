@@ -11,6 +11,7 @@ import {
 } from './lima'
 import { useRestaurants } from './restaurantsContext'
 import { newId, type Restaurant, type RestaurantStatus } from './types'
+import { today } from '../lib/dates'
 
 /** Guía cerrada de sitios de Lima: se consulta y, si te convence, se copia a tu mapa. */
 export function Recommendations({
@@ -61,9 +62,10 @@ export function Recommendations({
         await upsertRestaurant({
           ...existing,
           status,
+          priceLevel: existing.priceLevel ?? rec.price,
           visitedAt:
             status === 'visited'
-              ? (existing.visitedAt ?? new Date().toISOString().slice(0, 10))
+              ? (existing.visitedAt ?? today())
               : existing.visitedAt,
         }),
       )
@@ -77,9 +79,10 @@ export function Recommendations({
       status,
       address: `${rec.address}, ${rec.district}`,
       cuisine: categoryOf(rec.category).cuisine,
+      priceLevel: rec.price,
       lng: rec.lng,
       lat: rec.lat,
-      visitedAt: status === 'visited' ? new Date().toISOString().slice(0, 10) : undefined,
+      visitedAt: status === 'visited' ? today() : undefined,
       notes: `${rec.about}\n\nQué pedir: ${rec.dishes.join(', ')}.`,
     })
     onSaved(restaurant)
@@ -215,10 +218,10 @@ function RecommendationCard({
           className="button button--primary"
           onClick={() => void onSave(rec, 'wishlist')}
         >
-          {savedId ? 'Marcar como pendiente' : 'Quiero ir'}
+          {savedId ? 'Marcar como pendiente' : 'Queremos ir'}
         </button>
         <button type="button" className="button" onClick={() => void onSave(rec, 'visited')}>
-          Ya he ido
+          Ya fuimos
         </button>
         <a
           className="button"
