@@ -7,6 +7,8 @@ import {
   TIP_OPTIONS,
   type Quote,
 } from './price'
+import { FOR_US, PEOPLE } from '../lib/couple'
+import { MenuPricesPanel } from './MenuPricesPanel'
 import { useRestaurants } from './restaurantsContext'
 import { newId, type Restaurant } from './types'
 
@@ -36,13 +38,11 @@ export function QuoteSection({ restaurant }: { restaurant: Restaurant }) {
   const quote = restaurant.quote
   const [editing, setEditing] = useState(false)
   const [rows, setRows] = useState<Row[]>(() => rowsFrom(quote))
-  const [people, setPeople] = useState(quote?.people ?? 2)
   const [tipPercent, setTipPercent] = useState(quote?.tipPercent ?? 10)
   const [saving, setSaving] = useState(false)
 
   const open = () => {
     setRows(rowsFrom(quote))
-    setPeople(quote?.people ?? 2)
     setTipPercent(quote?.tipPercent ?? 10)
     setEditing(true)
   }
@@ -64,7 +64,7 @@ export function QuoteSection({ restaurant }: { restaurant: Restaurant }) {
 
   if (!editing) {
     const saved = quote && quote.items.length > 0
-    const totals = saved ? quoteTotals(quote.items, quote.people, quote.tipPercent) : null
+    const totals = saved ? quoteTotals(quote.items, PEOPLE, quote.tipPercent) : null
 
     return (
       <section className="section">
@@ -73,8 +73,7 @@ export function QuoteSection({ restaurant }: { restaurant: Restaurant }) {
           <button type="button" className="quote-summary" onClick={open}>
             <span className="quote-summary-total">{formatSoles(totals.total)}</span>
             <span className="quote-summary-sub">
-              {quote.people} {quote.people === 1 ? 'persona' : 'personas'} ·{' '}
-              {formatSoles(totals.perPerson)} c/u
+              {FOR_US} · {formatSoles(totals.perPerson)} c/u
               {quote.tipPercent > 0 && ` · propina ${quote.tipPercent}%`}
             </span>
             <span className="quote-summary-edit">Editar</span>
@@ -83,8 +82,8 @@ export function QuoteSection({ restaurant }: { restaurant: Restaurant }) {
           <>
             {restaurant.priceLevel && (
               <p className="quote-estimate">
-                Por su rango de precio, para dos:{' '}
-                <strong>{estimateForPeople(restaurant.priceLevel, 2)}</strong>{' '}
+                Por su rango de precio, {FOR_US}:{' '}
+                <strong>{estimateForPeople(restaurant.priceLevel, PEOPLE)}</strong>{' '}
                 <span>(sin bebidas)</span>
               </p>
             )}
@@ -98,7 +97,18 @@ export function QuoteSection({ restaurant }: { restaurant: Restaurant }) {
   }
 
   const items = validItems(rows)
-  const totals = quoteTotals(items, people, tipPercent)
+  const totals = quoteTotals(items, PEOPLE, tipPercent)
+  /** Añade un producto (o suma uno si ya está) a la cotización. */
+  const addItem = (name: string, price: number) =>
+    setRows((prev) => {
+      const existing = prev.find((row) => row.name === name)
+      if (existing) {
+        return prev.map((row) => (row === existing ? { ...row, qty: row.qty + 1 } : row))
+      }
+      return [...prev, { id: newId(), name, price: String(price), qty: 1 }]
+    })
+  const counts = Object.fromEntries(rows.map((row) => [row.name, row.qty]))
+
   const update = (id: string, patch: Partial<Row>) =>
     setRows((prev) => prev.map((row) => (row.id === id ? { ...row, ...patch } : row)))
 
@@ -107,26 +117,10 @@ export function QuoteSection({ restaurant }: { restaurant: Restaurant }) {
       <h3 className="section-title">Cotizar salida</h3>
 
       <div className="quote-settings">
-        <label className="quote-setting">
-          <span>Personas</span>
-          <span className="stepper">
-            <button
-              type="button"
-              onClick={() => setPeople((value) => Math.max(1, value - 1))}
-              aria-label="Una persona menos"
-            >
-              −
-            </button>
-            <strong>{people}</strong>
-            <button
-              type="button"
-              onClick={() => setPeople((value) => Math.min(30, value + 1))}
-              aria-label="Una persona más"
-            >
-              +
-            </button>
-          </span>
-        </label>
+        <div className="quote-setting">
+          <span>Para</span>
+          <strong className="quote-for">{FOR_US}</strong>
+        </div>
         <div className="quote-setting">
           <span>Propina</span>
           <div className="chips" role="group" aria-label="Propina">
@@ -144,6 +138,14 @@ export function QuoteSection({ restaurant }: { restaurant: Restaurant }) {
         </div>
       </div>
 
+      <MenuPricesPanel
+        target={{ placeId: restaurant.id }}
+        fallbackKey={restaurant.recId ? `rec:${restaurant.recId}` : undefined}
+        placeName={restaurant.name}
+        counts={counts}
+        onAdd={(item) => addItem(item.name, item.price)}
+      />
+
       {known.length > 0 && (
         <div className="chips chips--wrap">
           {known.map((dish) => (
@@ -151,20 +153,7 @@ export function QuoteSection({ restaurant }: { restaurant: Restaurant }) {
               key={dish.id}
               type="button"
               className="chip chip--add"
-              onClick={() =>
-                setRows((prev) => {
-                  const existing = prev.find((row) => row.name === dish.name)
-                  if (existing) {
-                    return prev.map((row) =>
-                      row === existing ? { ...row, qty: row.qty + 1 } : row,
-                    )
-                  }
-                  return [
-                    ...prev,
-                    { id: newId(), name: dish.name, price: String(dish.price), qty: 1 },
-                  ]
-                })
-              }
+              onClick={() => addItem(dish.name, dish.price!)}
             >
               + {dish.name} · {formatSoles(dish.price!)}
             </button>
@@ -257,7 +246,7 @@ export function QuoteSection({ restaurant }: { restaurant: Restaurant }) {
           className="button button--primary"
           disabled={saving || items.length === 0}
           onClick={() =>
-            void save({ people, tipPercent, items, updatedAt: new Date().toISOString() })
+            void save({ people: PEOPLE, tipPercent, items, updatedAt: new Date().toISOString() })
           }
         >
           {saving ? 'Guardando…' : 'Guardar'}

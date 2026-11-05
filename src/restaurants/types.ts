@@ -1,3 +1,4 @@
+import type { FoodCategory } from './food'
 import type { PriceLevel, Quote } from './price'
 
 export type Dish = {
@@ -36,6 +37,12 @@ export type Restaurant = {
   messageFrom?: string
   /** Web, Instagram o carta del local, apuntado a mano. */
   website?: string
+  /** ⭐ El próximo lugar al que piensan ir (solo uno a la vez). */
+  isNext?: boolean
+  /** Cuándo piensan ir (`yyyy-mm-dd`), si ya lo saben. */
+  nextDate?: string
+  /** Criollo, marino, norteño… elegido a mano; si falta, se deduce. */
+  foodCategory?: FoodCategory
   /** Rango de precio por persona (ver `price.ts`). */
   priceLevel?: PriceLevel
   /** Cotización de una salida a este lugar. */

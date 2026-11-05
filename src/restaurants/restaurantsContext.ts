@@ -15,6 +15,8 @@ export type RestaurantsValue = {
   /** Sube fotos del lugar (no de un plato). */
   addPhotos: (restaurantId: string, files: File[]) => Promise<void>
   removePhoto: (restaurantId: string, photoId: string) => Promise<void>
+  /** ⭐ Marca (o quita, con `null`) el próximo destino. Solo hay uno. */
+  setNextDestination: (id: string | null, date?: string) => Promise<void>
   /** Error de carga o guardado, para mostrarlo en pantalla. */
   error: string | null
   loadDemo: () => Promise<Restaurant[]>

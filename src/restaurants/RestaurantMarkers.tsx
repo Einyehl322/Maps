@@ -20,17 +20,19 @@ function formatScore(value: number): string {
 function createPin(restaurant: Restaurant): HTMLButtonElement {
   const average = averageRating(restaurant)
   const wishlist = restaurant.status === 'wishlist'
-  const cover = wishlist ? undefined : restaurant.photoIds?.[0]
+  const cover = wishlist || restaurant.isNext ? undefined : restaurant.photoIds?.[0]
 
   const element = document.createElement('button')
   element.type = 'button'
-  element.className = `pin${wishlist ? ' pin--wishlist' : ''}`
+  element.className = `pin${wishlist ? ' pin--wishlist' : ''}${restaurant.isNext ? ' pin--next' : ''}`
   element.title = restaurant.name
   element.setAttribute(
     'aria-label',
-    wishlist
-      ? `${restaurant.name} (pendiente)`
-      : `${restaurant.name}${average === null ? '' : `, ${formatScore(average)} de 5`}`,
+    restaurant.isNext
+      ? `Próximo destino: ${restaurant.name}`
+      : wishlist
+        ? `${restaurant.name} (pendiente)`
+        : `${restaurant.name}${average === null ? '' : `, ${formatScore(average)} de 5`}`,
   )
 
   if (cover) {
@@ -52,7 +54,9 @@ function createPin(restaurant: Restaurant): HTMLButtonElement {
 
   const body = document.createElement('span')
   body.className = 'pin-body'
-  if (wishlist) body.textContent = '🔖'
+  // ⭐ El próximo destino se ve como una estrella, por encima de todo.
+  if (restaurant.isNext) body.textContent = '★'
+  else if (wishlist) body.textContent = '🔖'
   else if (average === null) body.textContent = '♥'
   else body.textContent = formatScore(average)
   element.append(body)

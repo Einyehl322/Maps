@@ -1,3 +1,4 @@
+import { PEOPLE } from '../lib/couple'
 import { isPriceLevel, quoteTotals, type PriceLevel } from './price'
 import { newId, type Dish, type Restaurant } from './types'
 
@@ -17,6 +18,7 @@ export type Activity =
   | Entry<'photos_added', { photoIds: string[] }>
   | Entry<'quote_saved', { total: number; perPerson: number; people: number }>
   | Entry<'place_removed', Record<string, never>>
+  | Entry<'next_destination', { date?: string }>
 
 type Entry<K extends string, D> = {
   id: string
@@ -73,13 +75,13 @@ export function diffPlace(
 
   const quote = saved.quote
   if (quote && quote.items.length && quote.updatedAt !== previous?.quote?.updatedAt) {
-    const totals = quoteTotals(quote.items, quote.people, quote.tipPercent)
+    const totals = quoteTotals(quote.items, PEOPLE, quote.tipPercent)
     events.push(
       entry(
         saved,
         {
           kind: 'quote_saved',
-          detail: { total: totals.total, perPerson: totals.perPerson, people: quote.people },
+          detail: { total: totals.total, perPerson: totals.perPerson, people: PEOPLE },
         },
         actor,
       ),
@@ -99,6 +101,10 @@ export function dishAdded(place: Restaurant, dish: Dish, actor?: string): Activi
 
 export function photosAdded(place: Restaurant, photoIds: string[], actor?: string): Activity {
   return entry(place, { kind: 'photos_added', detail: { photoIds } }, actor)
+}
+
+export function nextDestination(place: Restaurant, actor?: string): Activity {
+  return entry(place, { kind: 'next_destination', detail: { date: place.nextDate } }, actor)
 }
 
 export function placeRemoved(place: Restaurant, actor?: string): Activity {
@@ -161,12 +167,12 @@ export function backfill(places: Restaurant[]): Activity[] {
     }
     const quote = place.quote
     if (quote?.items.length) {
-      const totals = quoteTotals(quote.items, quote.people, quote.tipPercent)
+      const totals = quoteTotals(quote.items, PEOPLE, quote.tipPercent)
       events.push({
         ...base,
         id: `pasado-cotizacion-${place.id}`,
         kind: 'quote_saved',
-        detail: { total: totals.total, perPerson: totals.perPerson, people: quote.people },
+        detail: { total: totals.total, perPerson: totals.perPerson, people: PEOPLE },
         at: quote.updatedAt || place.updatedAt,
       })
     }
@@ -202,6 +208,7 @@ const KINDS: ActivityKind[] = [
   'photos_added',
   'quote_saved',
   'place_removed',
+  'next_destination',
 ]
 
 /** Valida lo que llega de la base de datos o de IndexedDB. */

@@ -292,7 +292,7 @@ export function RestaurantDetail({
   onClose: () => void
   onEdit: () => void
 }) {
-  const { removeRestaurant, upsertRestaurant } = useRestaurants()
+  const { removeRestaurant, upsertRestaurant, setNextDestination } = useRestaurants()
   const [adding, setAdding] = useState(false)
   const [zoomed, setZoomed] = useState<{ url: string; alt: string } | null>(null)
 
@@ -356,6 +356,34 @@ export function RestaurantDetail({
         <Links restaurant={restaurant} />
 
         {restaurant.notes && <p className="detail-notes">{restaurant.notes}</p>}
+
+        <div className={`next-toggle${restaurant.isNext ? ' is-next' : ''}`}>
+          <button
+            type="button"
+            className="next-star"
+            onClick={() =>
+              void setNextDestination(restaurant.isNext ? null : restaurant.id).catch(() => {})
+            }
+            aria-pressed={restaurant.isNext === true}
+          >
+            <span aria-hidden="true">{restaurant.isNext ? '★' : '☆'}</span>
+            {restaurant.isNext ? 'Es nuestro próximo destino' : 'Marcar como próximo destino'}
+          </button>
+          {restaurant.isNext && (
+            <label className="next-date">
+              <span>¿Cuándo?</span>
+              <input
+                className="input"
+                type="date"
+                min={today()}
+                value={restaurant.nextDate ?? ''}
+                onChange={(event) =>
+                  void setNextDestination(restaurant.id, event.target.value).catch(() => {})
+                }
+              />
+            </label>
+          )}
+        </div>
 
         <div className="detail-buttons">
           {wishlist && (

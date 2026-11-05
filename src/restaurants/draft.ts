@@ -1,3 +1,4 @@
+import type { FoodCategory } from './food'
 import type { PriceLevel } from './price'
 import type { Restaurant, RestaurantStatus } from './types'
 
@@ -14,6 +15,8 @@ export type RestaurantDraft = {
   notes: string
   message: string
   website: string
+  /** null = deducirla del tipo de lugar. */
+  foodCategory: FoodCategory | null
   priceLevel: PriceLevel | null
   lng: number
   lat: number
@@ -31,6 +34,7 @@ export function draftFromRestaurant(restaurant: Restaurant): RestaurantDraft {
     notes: restaurant.notes ?? '',
     message: restaurant.message ?? '',
     website: restaurant.website ?? '',
+    foodCategory: restaurant.foodCategory ?? null,
     priceLevel: restaurant.priceLevel ?? null,
     lng: restaurant.lng,
     lat: restaurant.lat,
@@ -51,6 +55,7 @@ export function emptyDraft(
     notes: '',
     message: '',
     website: '',
+    foodCategory: null,
     priceLevel: null,
     lng,
     lat,

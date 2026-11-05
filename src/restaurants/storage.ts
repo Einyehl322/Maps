@@ -2,6 +2,7 @@ import { supabase } from '../lib/supabase'
 import { createCloudStore } from './cloudStore'
 import * as local from './localStore'
 import type { Activity } from './activity'
+import type { MenuPrices, MenuTarget } from './price'
 import type { Restaurant } from './types'
 
 /**
@@ -21,6 +22,10 @@ type Store = {
   saveActivity: (events: Activity[]) => Promise<void>
   loadActivity: () => Promise<Activity[]>
   memberNames: () => Promise<Record<string, string>>
+  /** Solo en la nube: la búsqueda corre en un servidor con la clave de la API. */
+  canSearchPrices: boolean
+  loadMenuLookups: () => Promise<Record<string, MenuPrices>>
+  searchMenu: (target: MenuTarget, force: boolean) => Promise<MenuPrices>
 }
 
 const localStore: Store = {
@@ -31,6 +36,11 @@ const localStore: Store = {
   saveActivity: local.saveActivity,
   loadActivity: local.loadActivity,
   memberNames: async () => ({}),
+  canSearchPrices: false,
+  loadMenuLookups: async () => ({}),
+  searchMenu: async () => {
+    throw new Error('La búsqueda de precios necesita Supabase conectado.')
+  },
   deletePhotos: async (ids) => {
     await Promise.all(ids.map((id) => local.deletePhoto(id)))
   },
@@ -46,6 +56,7 @@ function cloudStore(): Store {
   const cloud = createCloudStore(supabase!)
   return {
     ...cloud,
+    canSearchPrices: true,
     photoUrl: async (id) => {
       const url = await cloud.photoUrl(id)
       return url ? { url, release: () => {} } : null

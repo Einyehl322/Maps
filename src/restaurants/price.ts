@@ -17,7 +17,7 @@ export const PRICE_LABELS: Record<PriceLevel, string> = {
 }
 
 /** Lo mismo en números, para estimar. `null` = sin tope. */
-const PRICE_RANGES: Record<PriceLevel, [number, number | null]> = {
+export const PRICE_RANGES: Record<PriceLevel, [number, number | null]> = {
   1: [10, 30],
   2: [30, 70],
   3: [70, 150],
@@ -140,4 +140,68 @@ export function parseQuote(value: unknown): Quote | undefined {
     items,
     updatedAt: typeof raw.updatedAt === 'string' ? raw.updatedAt : '',
   }
+}
+
+// ---------- Precios de la carta encontrados en internet ----------
+
+export const MENU_CATEGORIES = ['entrada', 'fondo', 'postre', 'bebida', 'otro'] as const
+
+export type MenuItem = {
+  name: string
+  price: number
+  category: (typeof MENU_CATEGORIES)[number]
+  note: string | null
+  source_url: string
+}
+
+export type Confidence = 'alta' | 'media' | 'baja'
+
+export type MenuPrices = {
+  /** "place:<uuid>" o "rec:<id de la guía>". */
+  key: string
+  found: boolean
+  confidence: Confidence
+  summary: string | null
+  source_date: string | null
+  items: MenuItem[]
+  searched_at: string
+  /** true si vino de la caché (búsqueda de los últimos 7 días). */
+  cached?: boolean
+}
+
+export function parseMenuPrices(raw: unknown): MenuPrices | null {
+  if (typeof raw !== 'object' || raw === null) return null
+  const data = raw as Partial<MenuPrices>
+  if (typeof data.searched_at !== 'string' || !Array.isArray(data.items)) return null
+  if (typeof data.key !== 'string') return null
+  const items = data.items.filter(
+    (item): item is MenuItem =>
+      typeof item === 'object' &&
+      item !== null &&
+      typeof item.name === 'string' &&
+      typeof item.price === 'number' &&
+      MENU_CATEGORIES.includes(item.category) &&
+      typeof item.source_url === 'string' &&
+      /^https?:\/\//i.test(item.source_url),
+  )
+  return {
+    key: data.key,
+    found: data.found === true && items.length > 0,
+    confidence:
+      data.confidence === 'alta' || data.confidence === 'media' ? data.confidence : 'baja',
+    summary: typeof data.summary === 'string' ? data.summary : null,
+    source_date: typeof data.source_date === 'string' ? data.source_date : null,
+    items,
+    searched_at: data.searched_at,
+    cached: data.cached === true,
+  }
+}
+
+/** Qué buscar: un lugar guardado o uno de la guía (que no está en la base de datos). */
+export type MenuTarget =
+  | { placeId: string }
+  | { rec: { id: string; name: string; address: string; district: string; cuisine: string } }
+
+export function menuKey(target: MenuTarget): string {
+  return 'placeId' in target ? `place:${target.placeId}` : `rec:${target.rec.id}`
 }

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { foodCategoryInfo, FOOD_CATEGORIES, placeFoodCategory, type FoodCategory } from './food'
 import { usePhotoUrl } from './photos'
 import { priceMark } from './price'
 import { useRestaurants } from './restaurantsContext'
@@ -22,10 +23,12 @@ export function RestaurantList({
   const { restaurants, ready, loadDemo } = useRestaurants()
   const [filter, setFilter] = useState<Filter>('all')
   const [term, setTerm] = useState('')
+  const [food, setFood] = useState<FoodCategory | 'all'>('all')
 
   const needle = term.trim().toLowerCase()
   const visible = restaurants.filter((restaurant) => {
     if (filter !== 'all' && restaurant.status !== filter) return false
+    if (food !== 'all' && placeFoodCategory(restaurant) !== food) return false
     if (!needle) return true
     return [
       restaurant.name,
@@ -37,11 +40,10 @@ export function RestaurantList({
       .some((value) => value!.toLowerCase().includes(needle))
   })
 
-  const counts = {
-    all: restaurants.length,
-    visited: restaurants.filter((item) => item.status === 'visited').length,
-    wishlist: restaurants.filter((item) => item.status === 'wishlist').length,
-  }
+  // Solo las categorías que tienen algún lugar, en el orden de siempre.
+  const usedCategories = new Set(restaurants.map(placeFoodCategory))
+  const foodChips = FOOD_CATEGORIES.filter((info) => usedCategories.has(info.id))
+
 
   if (!ready) {
     return <p className="empty-hint panel-body">Cargando…</p>
@@ -79,10 +81,30 @@ export function RestaurantList({
               onClick={() => setFilter(item.id)}
             >
               {item.label}
-              <span className="tab-count">{counts[item.id]}</span>
             </button>
           ))}
         </div>
+        {foodChips.length > 1 && (
+          <div className="chips" role="group" aria-label="Filtrar por categoría">
+            <button
+              type="button"
+              className={`chip${food === 'all' ? ' is-active' : ''}`}
+              onClick={() => setFood('all')}
+            >
+              Todas
+            </button>
+            {foodChips.map((info) => (
+              <button
+                key={info.id}
+                type="button"
+                className={`chip${food === info.id ? ' is-active' : ''}`}
+                onClick={() => setFood(food === info.id ? 'all' : info.id)}
+              >
+                {info.emoji} {info.label}
+              </button>
+            ))}
+          </div>
+        )}
         <input
           type="search"
           className="input input--filter"
@@ -132,7 +154,7 @@ function ListItem({
         style={thumb ? { backgroundImage: `url("${thumb}")` } : undefined}
         aria-hidden="true"
       >
-        {!thumb && (wishlist ? '🔖' : '♥')}
+        {!thumb && foodCategoryInfo(placeFoodCategory(restaurant)).emoji}
       </span>
       <span className="list-text">
         <span className="list-name">{restaurant.name}</span>

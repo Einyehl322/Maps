@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { PEOPLE } from '../lib/couple'
+import { formatDay } from '../lib/dates'
 import { backfill, byNewest, factKey, type Activity, type ActivityKind } from './activity'
 import { usePhotoUrl } from './photos'
 import { formatSoles, PRICE_LABELS, priceMark, quoteTotals, spendingOf } from './price'
@@ -10,7 +12,11 @@ type Filter = 'all' | 'visits' | 'food' | 'photos' | 'money' | 'love'
 
 const FILTERS: { id: Filter; label: string; kinds: ActivityKind[] }[] = [
   { id: 'all', label: 'Todo', kinds: [] },
-  { id: 'visits', label: 'Salidas', kinds: ['place_added', 'visited', 'wishlist', 'place_removed'] },
+  {
+    id: 'visits',
+    label: 'Salidas',
+    kinds: ['place_added', 'visited', 'wishlist', 'next_destination', 'place_removed'],
+  },
   { id: 'food', label: 'Platos', kinds: ['dish_added'] },
   { id: 'photos', label: 'Fotos', kinds: ['photos_added'] },
   { id: 'money', label: 'Precios', kinds: ['price_level', 'quote_saved'] },
@@ -87,7 +93,7 @@ export function Diary({
   const planned = restaurants.reduce((sum, item) => {
     const quote = item.quote
     if (!quote?.items.length) return sum
-    return sum + quoteTotals(quote.items, quote.people, quote.tipPercent).total
+    return sum + quoteTotals(quote.items, PEOPLE, quote.tipPercent).total
   }, 0)
   const first = entries?.length ? entries[entries.length - 1].at : null
 
@@ -181,6 +187,7 @@ const ICONS: Record<ActivityKind, string> = {
   photos_added: '📷',
   quote_saved: '🧾',
   place_removed: '🗑',
+  next_destination: '⭐',
 }
 
 function DiaryEntry({
@@ -257,15 +264,22 @@ function DiaryEntry({
       extra = (
         <span className="timeline-tags">
           <span>{formatSoles(entry.detail.total)}</span>
-          <span>
-            {entry.detail.people} {entry.detail.people === 1 ? 'persona' : 'personas'} ·{' '}
-            {formatSoles(entry.detail.perPerson)} c/u
-          </span>
+          <span>{formatSoles(entry.detail.perPerson)} c/u</span>
         </span>
       )
       break
     case 'place_removed':
       text = <>Borraron {place}</>
+      break
+    case 'next_destination':
+      text = (
+        <>
+          Eligieron {place} como próximo destino
+          {entry.detail.date && (
+            <span className="timeline-muted"> · para el {formatDay(entry.detail.date)}</span>
+          )}
+        </>
+      )
       break
   }
 

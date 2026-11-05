@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useMap } from './mapContext'
+import { SEARCH_REQUEST } from './searchRequest'
 import { useGeocoder, type GeoResult } from './useGeocoder'
 
 export function SearchBox({ onSelect }: { onSelect: (result: GeoResult) => void }) {
@@ -14,6 +15,19 @@ export function SearchBox({ onSelect }: { onSelect: (result: GeoResult) => void 
   useEffect(() => {
     setHighlighted(0)
   }, [results])
+
+  // Búsquedas pedidas desde otras partes de la app ("más lugares norteños").
+  useEffect(() => {
+    const onRequest = (event: Event) => {
+      const term = (event as CustomEvent<string>).detail
+      if (typeof term !== 'string' || !term.trim()) return
+      setQuery(term)
+      setOpen(true)
+      inputRef.current?.focus()
+    }
+    window.addEventListener(SEARCH_REQUEST, onRequest)
+    return () => window.removeEventListener(SEARCH_REQUEST, onRequest)
+  }, [])
 
   const select = (result: GeoResult) => {
     setQuery(result.name)

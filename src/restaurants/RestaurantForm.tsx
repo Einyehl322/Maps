@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useAccount } from '../auth/accountContext'
 import { normalizeUrl } from '../osm/details'
 import type { RestaurantDraft } from './draft'
+import { FOOD_CATEGORIES, guessFoodCategory } from './food'
 import { PRICE_LABELS, PRICE_LEVELS, priceMark } from './price'
 import { useRestaurants } from './restaurantsContext'
 import { newId, type Restaurant } from './types'
@@ -62,6 +63,7 @@ export function RestaurantForm({
         notes: values.notes.trim() || undefined,
         priceLevel: values.priceLevel ?? undefined,
         website: normalizeUrl(values.website),
+        foodCategory: values.foodCategory ?? undefined,
         ...messageFields(values.message, draft.message, account?.email),
         lng: values.lng,
         lat: values.lat,
@@ -157,6 +159,29 @@ export function RestaurantForm({
               />
             </label>
           )}
+        </div>
+
+        <div className="field">
+          <span className="field-label">
+            Categoría
+            {!values.foodCategory && <span className="field-hint"> · sugerida</span>}
+          </span>
+          <div className="chips" role="group" aria-label="Categoría">
+            {FOOD_CATEGORIES.map((info) => {
+              const active =
+                (values.foodCategory ?? guessFoodCategory(values.cuisine, values.name)) === info.id
+              return (
+                <button
+                  key={info.id}
+                  type="button"
+                  className={`chip${active ? ' is-active' : ''}`}
+                  onClick={() => set('foodCategory', info.id)}
+                >
+                  {info.emoji} {info.label}
+                </button>
+              )
+            })}
+          </div>
         </div>
 
         <div className="field">

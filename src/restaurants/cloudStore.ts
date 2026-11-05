@@ -1,7 +1,15 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { PHOTO_BUCKET } from '../lib/supabase'
-import { isPriceLevel, parseQuote, type Quote } from './price'
+import {
+  isPriceLevel,
+  parseMenuPrices,
+  parseQuote,
+  type MenuPrices,
+  type MenuTarget,
+  type Quote,
+} from './price'
 import { parseActivity, type Activity } from './activity'
+import { isFoodCategory } from './food'
 import type { Dish, Restaurant } from './types'
 
 /**
@@ -27,6 +35,9 @@ type PlaceRow = {
   website: string | null
   message: string | null
   message_from: string | null
+  food_category: string | null
+  is_next: boolean
+  next_date: string | null
   created_at: string
   updated_at: string
 }
@@ -61,6 +72,9 @@ function toRestaurant(row: PlaceRow & { dishes: DishRow[] }): Restaurant {
     website: row.website ?? undefined,
     message: row.message ?? undefined,
     messageFrom: row.message_from ?? undefined,
+    foodCategory: isFoodCategory(row.food_category) ? row.food_category : undefined,
+    isNext: row.is_next === true || undefined,
+    nextDate: row.next_date ?? undefined,
     dishes: [...row.dishes]
       .sort((a, b) => a.created_at.localeCompare(b.created_at))
       .map(
@@ -99,6 +113,9 @@ function toPlaceRow(restaurant: Restaurant): PlaceRow {
     website: restaurant.website ?? null,
     message: restaurant.message ?? null,
     message_from: restaurant.messageFrom ?? null,
+    food_category: restaurant.foodCategory ?? null,
+    is_next: restaurant.isNext === true,
+    next_date: restaurant.nextDate ?? null,
     created_at: restaurant.createdAt,
     updated_at: restaurant.updatedAt,
   }
@@ -197,6 +214,39 @@ export function createCloudStore(client: SupabaseClient) {
           }),
         )
         .filter((item): item is Activity => item !== null)
+    },
+
+    /** Todas las cartas ya buscadas (de lugares guardados y de la guía), por clave. */
+    async loadMenuLookups(): Promise<Record<string, MenuPrices>> {
+      const { data, error } = await client.from('menu_lookups').select('*')
+      if (error) throw error
+      const result: Record<string, MenuPrices> = {}
+      for (const row of data ?? []) {
+        const parsed = parseMenuPrices(row)
+        if (parsed) result[parsed.key] = parsed
+      }
+      return result
+    },
+
+    /** Busca la carta en internet (función `price-search`). Tarda ~1 minuto. */
+    async searchMenu(target: MenuTarget, force: boolean): Promise<MenuPrices> {
+      const { data, error } = await client.functions.invoke('price-search', {
+        body: { ...target, force },
+      })
+      if (error) {
+        // El cuerpo del error trae el mensaje de la función, en español.
+        let message = error.message
+        try {
+          const body = await (error.context as Response).json()
+          if (typeof body?.error === 'string') message = body.error
+        } catch {
+          // Sin cuerpo legible: se queda el mensaje genérico.
+        }
+        throw new Error(message)
+      }
+      const parsed = parseMenuPrices(data)
+      if (!parsed) throw new Error('Respuesta inesperada del buscador de precios')
+      return parsed
     },
 
     /** Nombres de los miembros para el diario ("Ana subió 3 fotos"). */

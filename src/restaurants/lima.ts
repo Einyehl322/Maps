@@ -8,10 +8,13 @@
  * Los precios son orientativos por persona (soles) y cambian; la carta manda.
  */
 
+import type { FoodCategory } from './food'
 import type { PriceLevel } from './price'
 
 export type RecCategory =
   | 'cevicheria'
+  | 'norteno'
+  | 'selvatico'
   | 'sanguche'
   | 'pasta'
   | 'criollo'
@@ -34,12 +37,14 @@ export const REC_CATEGORIES: {
   { id: 'cevicheria', label: 'Cevicherías', cuisine: 'Cevichería', emoji: '🐟' },
   { id: 'sanguche', label: 'Sangucherías', cuisine: 'Sanguchería', emoji: '🥪' },
   { id: 'criollo', label: 'Criollo', cuisine: 'Criolla', emoji: '🍲' },
+  { id: 'norteno', label: 'Norteño', cuisine: 'Norteña', emoji: '🌵' },
+  { id: 'selvatico', label: 'Selvático', cuisine: 'Amazónica', emoji: '🌿' },
   { id: 'pasta', label: 'Pastas y pizza', cuisine: 'Italiana', emoji: '🍝' },
   { id: 'nikkei', label: 'Nikkei', cuisine: 'Nikkei', emoji: '🍣' },
   { id: 'chifa', label: 'Chifa', cuisine: 'Chifa', emoji: '🥡' },
   { id: 'pollo', label: 'Pollo a la brasa', cuisine: 'Pollería', emoji: '🍗' },
   { id: 'anticucho', label: 'Anticuchos y carnes', cuisine: 'Parrilla', emoji: '🔥' },
-  { id: 'alta-cocina', label: 'Alta cocina', cuisine: 'Alta cocina', emoji: '⭐' },
+  { id: 'alta-cocina', label: 'Alta cocina', cuisine: 'Alta cocina', emoji: '🥂' },
   { id: 'cafe', label: 'Café y dulce', cuisine: 'Cafetería', emoji: '☕' },
   { id: 'bar', label: 'Bares y pisco', cuisine: 'Bar', emoji: '🍸' },
   { id: 'mercado', label: 'Mercados', cuisine: 'Mercado', emoji: '🧺' },
@@ -66,6 +71,28 @@ export type Recommendation = {
 
 // Los rangos de precio se comparten con los lugares guardados.
 export { PRICE_LABELS, priceMark } from './price'
+
+/** Categoría común (la de los filtros y el presupuesto) de cada sección de la guía. */
+const REC_FOOD: Record<RecCategory, FoodCategory> = {
+  cevicheria: 'marino',
+  norteno: 'norteno',
+  selvatico: 'selvatico',
+  sanguche: 'sangucheria',
+  pasta: 'italiana',
+  criollo: 'criollo',
+  nikkei: 'nikkei',
+  chifa: 'chifa',
+  pollo: 'polleria',
+  anticucho: 'parrilla',
+  'alta-cocina': 'alta-cocina',
+  cafe: 'cafe',
+  bar: 'bar',
+  mercado: 'mercado',
+}
+
+export function recFoodCategory(rec: Recommendation): FoodCategory {
+  return REC_FOOD[rec.category]
+}
 
 /** Centro de Lima metropolitana (Plaza San Martín, más o menos). */
 export const LIMA_CENTER: [number, number] = [-77.0345, -12.0553]
@@ -368,6 +395,47 @@ export const LIMA_RECOMMENDATIONS: Recommendation[] = [
     dishes: ['Bufé criollo (domingos)', 'Chicharrón', 'Chilcano de pisco'],
   },
   {
+    id: 'senorio-de-sulco',
+    name: 'El Señorío de Sulco',
+    category: 'criollo',
+    district: 'Miraflores',
+    address: 'Malecón Cisneros 1470',
+    lng: -77.04391,
+    lat: -12.1197,
+    price: 3,
+    about:
+      'Cocina criolla y limeña de siempre frente al mar, en el malecón de Miraflores. Clásico para un almuerzo largo de domingo.',
+    dishes: ['Carta criolla limeña', 'Postres limeños'],
+  },
+  // ---------- Norteño ----------
+  {
+    id: 'fiesta-gourmet',
+    name: 'Fiesta Gourmet Restaurante',
+    category: 'norteno',
+    district: 'Miraflores',
+    address: 'Av. Reducto 1278',
+    lng: -77.02376,
+    lat: -12.13168,
+    price: 3,
+    about:
+      'La cocina chiclayana (norte del Perú) llevada a mesa de mantel: arroz con pato, cabrito y cebiches del norte.',
+    dishes: ['Arroz con pato', 'Cabrito', 'Ceviche norteño'],
+  },
+  // ---------- Selvático ----------
+  {
+    id: 'amaz',
+    name: 'ámaZ',
+    category: 'selvatico',
+    district: 'Miraflores',
+    address: 'Av. La Paz 1079',
+    lng: -77.02656,
+    lat: -12.12871,
+    price: 3,
+    about:
+      'Cocina amazónica con insumos de la selva peruana: pescados de río, frutas y sabores que casi no se ven en Lima.',
+    dishes: ['Pescados amazónicos', 'Juane', 'Tragos con frutas de la selva'],
+  },
+  {
     id: 'museo-larco-cafe',
     name: 'Museo Larco Café Restaurant',
     category: 'criollo',
@@ -518,6 +586,19 @@ export const LIMA_RECOMMENDATIONS: Recommendation[] = [
     about:
       'Grimanesa Vargas empezó con una carretilla en los años 70 y acabó en local propio sin cambiar el punto del corazón. Se hace cola de pie.',
     dishes: ['Anticuchos de corazón', 'Rachi', 'Pan con anticucho'],
+  },
+  {
+    id: 'el-tio-mario',
+    name: 'El Tío Mario',
+    category: 'anticucho',
+    district: 'Barranco',
+    address: 'Jr. Zepita 214',
+    lng: -77.02238,
+    lat: -12.14924,
+    price: 1,
+    about:
+      'Anticuchería de barrio junto a la Bajada de Baños de Barranco. Se llena de noche; perfecto antes o después de pasear por el puente.',
+    dishes: ['Anticuchos de corazón', 'Rachi', 'Picarones'],
   },
   {
     id: 'osso',

@@ -2,6 +2,7 @@ import type { Point } from 'geojson'
 import type { GeoJSONSource, MapMouseEvent } from 'maplibre-gl'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useAccount } from '../auth/accountContext'
+import { US } from '../lib/couple'
 import { BasemapSwitcher } from '../map/BasemapSwitcher'
 import { useMap } from '../map/mapContext'
 import { SearchBox } from '../map/SearchBox'
@@ -20,10 +21,12 @@ import {
   emptyDraft,
   type RestaurantDraft,
 } from '../restaurants/draft'
-import { LIMA_RECOMMENDATIONS } from '../restaurants/lima'
+import { LIMA_RECOMMENDATIONS, type Recommendation } from '../restaurants/lima'
 import { RecommendationMarkers } from '../restaurants/RecommendationMarkers'
 import { Recommendations } from '../restaurants/Recommendations'
+import { BudgetView } from '../restaurants/BudgetView'
 import { Diary } from '../restaurants/Diary'
+import { NextDestination } from '../restaurants/NextDestination'
 import { RestaurantDetail } from '../restaurants/RestaurantDetail'
 import { RestaurantForm } from '../restaurants/RestaurantForm'
 import { RestaurantList } from '../restaurants/RestaurantList'
@@ -46,8 +49,8 @@ type Place = {
   cuisine?: string
 }
 
-/** Dos vistas en el panel: lo tuyo y la guía de Lima. */
-type View = 'mine' | 'guide'
+/** Tres vistas en el panel: lo nuestro, la guía de Lima y el presupuesto. */
+type View = 'mine' | 'guide' | 'budget'
 
 const OSM_KEY = 'maps:osm'
 
@@ -70,6 +73,17 @@ export function AppShell() {
   const { places: osmPlaces, status: osmStatus } = useOsmPlaces(map, osmEnabled)
 
   const selected = restaurants.find((item) => item.id === selectedId) ?? null
+  const next = restaurants.find((item) => item.isNext) ?? null
+
+  /** Abre un lugar de la guía: su ficha en la pestaña de la guía. */
+  const openRec = (rec: Recommendation) => {
+    setSelectedId(null)
+    setPlace(null)
+    setDraft(null)
+    setView('guide')
+    setRecId(rec.id)
+    map.flyTo({ center: [rec.lng, rec.lat], zoom: 16.5, duration: 800 })
+  }
 
   // Lo que ya tienes guardado no se repite en la capa: tu pin manda.
   const savedOsmIds = useMemo(
@@ -230,6 +244,7 @@ export function AppShell() {
     return (
       <div className="views">
         <Brand restaurants={restaurants} onOpenDiary={() => setDiaryOpen(true)} />
+        {next && <NextDestination place={next} onOpen={() => focus(next)} />}
         <div className="view-tabs" role="tablist">
           <button
             type="button"
@@ -247,12 +262,23 @@ export function AppShell() {
             className={`view-tab${view === 'guide' ? ' is-active' : ''}`}
             onClick={() => setView('guide')}
           >
-            Dónde comer en Lima
+            Guía de Lima
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={view === 'budget'}
+            className={`view-tab${view === 'budget' ? ' is-active' : ''}`}
+            onClick={() => setView('budget')}
+          >
+            Presupuesto
           </button>
         </div>
 
         {view === 'mine' ? (
           <RestaurantList onSelect={focus} onExplore={() => setView('guide')} />
+        ) : view === 'budget' ? (
+          <BudgetView onSelectPlace={focus} onSelectRec={openRec} />
         ) : (
           <Recommendations
             activeId={recId}
@@ -427,7 +453,10 @@ function Brand({
   const photos = restaurants.reduce((sum, item) => sum + (item.photoIds?.length ?? 0), 0)
 
   const facts = [
-    `${visited} ${visited === 1 ? 'lugar juntos' : 'lugares juntos'}`,
+    US,
+    visited > 0
+      ? `${visited} ${visited === 1 ? 'lugar juntos' : 'lugares juntos'}`
+      : `${restaurants.length} por conocer`,
     photos > 0 && `${photos} ${photos === 1 ? 'foto' : 'fotos'}`,
     spent > 0 && `${formatSoles(spent, true)} en comida`,
   ].filter(Boolean)
@@ -444,7 +473,7 @@ function Brand({
       </button>
       <div className="brand-text">
         <h1>Nuestros lugares</h1>
-        <p>{restaurants.length === 0 ? 'Nuestro mapa de Lima' : facts.join(' · ')}</p>
+        <p>{restaurants.length === 0 ? `${US} · nuestro mapa de Lima` : facts.join(' · ')}</p>
       </div>
     </header>
   )

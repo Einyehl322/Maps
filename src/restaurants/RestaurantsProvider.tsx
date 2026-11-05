@@ -5,6 +5,7 @@ import {
   backfill,
   diffPlace,
   dishAdded,
+  nextDestination,
   photosAdded,
   placeRemoved,
   type Activity,
@@ -222,6 +223,28 @@ export function RestaurantsProvider({ children }: { children: ReactNode }) {
     [persist],
   )
 
+  const setNextDestination = useCallback(
+    async (id: string | null, date?: string) => {
+      const now = new Date().toISOString()
+      // Primero se quita la estrella anterior: la base de datos solo admite una.
+      for (const place of latestRef.current) {
+        if (place.isNext && place.id !== id) {
+          await persist({ ...place, isNext: undefined, nextDate: undefined, updatedAt: now })
+        }
+      }
+      if (!id) return
+      const target = find(id)
+      if (!target) return
+      const changed = !target.isNext
+      const saved: Restaurant = { ...target, isNext: true, nextDate: date || undefined, updatedAt: now }
+      await persist(saved)
+      if (changed || target.nextDate !== saved.nextDate) {
+        log([nextDestination(saved, actorRef.current)])
+      }
+    },
+    [persist],
+  )
+
   const loadDemo = useCallback(async () => {
     const created = DEMO_RESTAURANTS()
     try {
@@ -247,6 +270,7 @@ export function RestaurantsProvider({ children }: { children: ReactNode }) {
         removeDish,
         addPhotos,
         removePhoto,
+        setNextDestination,
         loadDemo,
       }}
     >

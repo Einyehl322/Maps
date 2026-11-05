@@ -67,6 +67,23 @@ bucket privado.
 El correo llega a todos los miembros menos a quien marcó el lugar, con el
 mensaje 💌 si lo escribió.
 
+## 4. Precios de la carta en tiempo real (opcional, de pago)
+
+En "Cotizar salida" → **🔎 Buscar precios de la carta**: Claude busca en
+internet (web del local, Instagram, apps de delivery) y devuelve cada plato y
+bebida con su precio en soles y la fuente; con **+** lo añaden a la cotización.
+
+1. Crea una API key en <https://console.anthropic.com> y carga saldo.
+2. Supabase → **Edge Functions → Deploy a new function → Via Editor**,
+   nombre `price-search`, pega `supabase/functions/price-search/index.ts`.
+3. Supabase → **Edge Functions → Secrets**: `ANTHROPIC_API_KEY`.
+
+Costo aproximado: unos US$0.30 por búsqueda (hasta 4 búsquedas web a
+US$0.01 cada una + lo que lee el modelo). Cada resultado se guarda 7 días en
+`menu_prices`, así que volver a abrir la carta no cuesta nada; solo "Buscar de
+nuevo" hace una búsqueda nueva. Los precios salen de lo publicado en internet y
+pueden estar desactualizados: cada uno lleva su enlace a la fuente.
+
 ## El diario
 
 Toca el corazón ♥ de la cabecera: se abre "Nuestro diario", con todo lo que
