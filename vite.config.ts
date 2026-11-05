@@ -13,4 +13,8 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['maplibre-gl'],
   },
+  // El worker de MapLibre se carga como módulo (`type: 'module'`).
+  worker: {
+    format: 'es',
+  },
 })

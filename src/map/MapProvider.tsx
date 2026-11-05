@@ -3,12 +3,19 @@ import {
   MapLibreMap,
   NavigationControl,
   ScaleControl,
+  setWorkerUrl,
 } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
+// MapLibre 6 busca su worker junto a su propio módulo; en el build de
+// producción Vite no lo copia y el mapa sale en blanco. Así Vite lo empaqueta
+// (con el código compartido que importa) y le pasamos su URL.
+import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { BASEMAPS, DEFAULT_BASEMAP, isBasemapId, type BasemapId } from './basemaps'
 import { MapContext } from './mapContext'
 import './map.css'
+
+setWorkerUrl(workerUrl)
 
 const CAMERA_KEY = 'maps:camera'
 const BASEMAP_KEY = 'maps:basemap'
