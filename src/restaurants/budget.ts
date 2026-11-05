@@ -1,5 +1,5 @@
 import { PEOPLE } from '../lib/couple'
-import { placeFoodCategory, type FoodCategory } from './food'
+import { linkedRec, placeFoodCategory, type FoodCategory } from './food'
 import { LIMA_RECOMMENDATIONS, recFoodCategory, type Recommendation } from './lima'
 import { PRICE_RANGES, quoteTotals, type Confidence, type MenuPrices } from './price'
 import type { Restaurant } from './types'
@@ -64,7 +64,7 @@ export function candidates(places: Restaurant[]): Candidate[] {
       (place): Candidate => ({
         key: `place:${place.id}`,
         name: place.name,
-        district: place.address?.split(',').at(-1)?.trim(),
+        district: linkedRec(place)?.district ?? districtFrom(place.address),
         category: placeFoodCategory(place),
         place,
       }),
@@ -81,9 +81,19 @@ export function candidates(places: Restaurant[]): Candidate[] {
   ]
 }
 
+/**
+ * El distrito de una dirección libre: "Av. X 123, Surquillo" → "Surquillo".
+ * Las de OpenStreetMap terminan en "…, Lima, 15084, Perú": se saltan esas.
+ */
+function districtFrom(address: string | undefined): string | undefined {
+  const parts = (address ?? '').split(',').map((part) => part.trim()).filter(Boolean)
+  const skip = /^(per[uú]|lima|lima metropolitana|callao|\d+)$/i
+  return parts.slice(1).find((part) => !skip.test(part) && !/^(av|jr|calle|jir[oó]n|avenida|pasaje)\b/i.test(part))
+}
+
 /** La carta que corresponde: la propia del lugar o la de su ficha en la guía. */
 export function menuFor(candidate: Candidate, lookups: Record<string, MenuPrices>) {
-  const recId = candidate.place?.recId ?? candidate.rec?.id
+  const recId = (candidate.place && linkedRec(candidate.place)?.id) ?? candidate.rec?.id
   return lookups[candidate.key] ?? (recId ? lookups[`rec:${recId}`] : undefined)
 }
 

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { MenuLookupsContext, type BulkState } from './menuLookupsContext'
+import { MENU_SNAPSHOT } from './menuSnapshot'
 import { menuKey, type MenuPrices, type MenuTarget } from './price'
 import { store } from './storage'
 
@@ -12,7 +13,8 @@ import { store } from './storage'
 const CONCURRENCY = 3
 
 export function MenuLookupsProvider({ children }: { children: ReactNode }) {
-  const [lookups, setLookups] = useState<Record<string, MenuPrices>>({})
+  // Las cartas buscadas a mano sirven desde el principio; las de la nube mandan.
+  const [lookups, setLookups] = useState<Record<string, MenuPrices>>(MENU_SNAPSHOT)
   const [ready, setReady] = useState(!store.canSearchPrices)
   const [bulk, setBulk] = useState<BulkState | null>(null)
   const stopRef = useRef(false)
@@ -21,7 +23,7 @@ export function MenuLookupsProvider({ children }: { children: ReactNode }) {
     if (!store.canSearchPrices) return
     void store
       .loadMenuLookups()
-      .then(setLookups)
+      .then((cloud) => setLookups({ ...MENU_SNAPSHOT, ...cloud }))
       .catch(() => {})
       .finally(() => setReady(true))
   }, [])

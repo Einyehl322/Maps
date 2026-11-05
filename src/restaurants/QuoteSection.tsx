@@ -8,6 +8,7 @@ import {
   type Quote,
 } from './price'
 import { FOR_US, PEOPLE } from '../lib/couple'
+import { linkedRec } from './food'
 import { MenuPricesPanel } from './MenuPricesPanel'
 import { useRestaurants } from './restaurantsContext'
 import { newId, type Restaurant } from './types'
@@ -140,7 +141,7 @@ export function QuoteSection({ restaurant }: { restaurant: Restaurant }) {
 
       <MenuPricesPanel
         target={{ placeId: restaurant.id }}
-        fallbackKey={restaurant.recId ? `rec:${restaurant.recId}` : undefined}
+        fallbackKey={linkedRec(restaurant) ? `rec:${linkedRec(restaurant)!.id}` : undefined}
         placeName={restaurant.name}
         counts={counts}
         onAdd={(item) => addItem(item.name, item.price)}

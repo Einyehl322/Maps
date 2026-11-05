@@ -54,7 +54,8 @@ export function MenuPricesPanel({
     }
   }
 
-  if (!enabled) {
+  // Sin la nube no se puede buscar, pero sí mostrar las cartas que ya hay.
+  if (!enabled && !data) {
     return (
       <div className="menu-prices menu-prices--off">
         <strong>🔎 Precios de la carta</strong>
@@ -103,15 +104,17 @@ export function MenuPricesPanel({
     <div className="menu-prices">
       <div className="menu-head">
         <strong>🔎 Precios de la carta</strong>
-        <button
-          type="button"
-          className="link-button"
-          onClick={() => {
-            if (confirm('¿Buscar de nuevo? Es una búsqueda nueva (≈ US$0.30).')) void search(true)
-          }}
-        >
-          Buscar de nuevo
-        </button>
+        {enabled && (
+          <button
+            type="button"
+            className="link-button"
+            onClick={() => {
+              if (confirm('¿Buscar de nuevo? Es una búsqueda nueva (≈ US$0.30).')) void search(true)
+            }}
+          >
+            Buscar de nuevo
+          </button>
+        )}
       </div>
 
       {data.found ? (

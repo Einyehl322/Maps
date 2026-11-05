@@ -1,4 +1,4 @@
-import { LIMA_RECOMMENDATIONS, recFoodCategory } from './lima'
+import { LIMA_RECOMMENDATIONS, recFoodCategory, type Recommendation } from './lima'
 import type { Restaurant } from './types'
 
 /**
@@ -189,10 +189,21 @@ function matches(haystack: string, word: string): boolean {
 
 const REC_BY_ID = new Map(LIMA_RECOMMENDATIONS.map((rec) => [rec.id, rec]))
 
+/**
+ * El lugar de la guía que corresponde a uno guardado: el enlazado, o uno cuyo
+ * nombre empieza igual ("Museo Larco" → "Museo Larco Café Restaurant").
+ */
+export function linkedRec(place: Restaurant): Recommendation | undefined {
+  if (place.recId) return REC_BY_ID.get(place.recId)
+  const name = normalize(place.name).trim()
+  if (name.length < 6) return undefined
+  return LIMA_RECOMMENDATIONS.find((rec) => normalize(rec.name).startsWith(name))
+}
+
 /** La categoría de un lugar guardado: la elegida, la de la guía o la deducida. */
 export function placeFoodCategory(place: Restaurant): FoodCategory {
   if (place.foodCategory) return place.foodCategory
-  const rec = place.recId ? REC_BY_ID.get(place.recId) : undefined
+  const rec = linkedRec(place)
   if (rec) return recFoodCategory(rec)
   return guessFoodCategory(place.cuisine, place.name)
 }
