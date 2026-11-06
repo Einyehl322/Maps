@@ -24,7 +24,11 @@ export function perPersonFromMenu(menu: MenuPrices): { low: number; typical: num
   const mains = of('fondo').length
     ? of('fondo')
     : menu.items.filter((item) => item.category !== 'bebida').map((item) => item.price)
-  const drinks = of('bebida')
+  // El maridaje de un menú degustación es opcional y cuesta como otro menú:
+  // no cuenta como "la bebida" de cada uno.
+  const drinks = menu.items
+    .filter((item) => item.category === 'bebida' && !/maridaje|pairing/i.test(item.name))
+    .map((item) => item.price)
   if (!mains.length) return null
   const low = Math.min(...mains) + (drinks.length ? Math.min(...drinks) : 0)
   const typical = median(mains)! + (drinks.length ? median(drinks)! : 0)

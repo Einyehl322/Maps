@@ -1,3 +1,4 @@
+import { GUIDE_MENU_SNAPSHOT } from './menuSnapshotGuide'
 import type { MenuItem, MenuPrices } from './price'
 
 /**
@@ -32,7 +33,7 @@ function item(
   return { name, price, category, note, source_url }
 }
 
-export const MENU_SNAPSHOT: Record<string, MenuPrices> = {
+const HAND_PICKED: Record<string, MenuPrices> = {
   'rec:museo-larco-cafe': {
     key: 'rec:museo-larco-cafe',
     found: true,
@@ -115,4 +116,10 @@ export const MENU_SNAPSHOT: Record<string, MenuPrices> = {
       item('Jugo combinado', 15, 'bebida', SURQUILLO, 'S/ 10–15'),
     ],
   },
+}
+
+/** Todas las cartas conocidas: las de la guía y las revisadas a mano (que mandan). */
+export const MENU_SNAPSHOT: Record<string, MenuPrices> = {
+  ...GUIDE_MENU_SNAPSHOT,
+  ...HAND_PICKED,
 }

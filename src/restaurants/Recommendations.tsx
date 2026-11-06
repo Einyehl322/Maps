@@ -106,7 +106,10 @@ export function Recommendations({
           >
             Todo
           </button>
-          {REC_CATEGORIES.map((item) => (
+          {/* Solo las secciones que tienen lugares (p. ej. no "Selvático" vacío). */}
+          {REC_CATEGORIES.filter((item) =>
+            LIMA_RECOMMENDATIONS.some((rec) => rec.category === item.id),
+          ).map((item) => (
             <button
               key={item.id}
               type="button"

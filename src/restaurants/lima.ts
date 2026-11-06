@@ -129,13 +129,13 @@ export const LIMA_RECOMMENDATIONS: Recommendation[] = [
     id: 'al-toke-pez',
     name: 'Al Toke Pez',
     category: 'cevicheria',
-    district: 'Surquillo',
-    address: 'Av. Angamos Este 886',
-    lng: -77.02262,
-    lat: -12.11339,
+    district: 'Miraflores',
+    address: 'Calle Manuel Bonilla 113',
+    lng: -77.02828,
+    lat: -12.11984,
     price: 1,
     about:
-      'Barra de diez taburetes en plena avenida donde Tomás Matsufuji, doctor en química, cocina uno de los platos más baratos y mejores de Lima. Cola desde antes de abrir.',
+      'Barra pequeña donde Tomás Matsufuji, doctor en química, cocina uno de los platos más baratos y mejores de Lima. En 2025 se mudó de Surquillo a Miraflores. Cola desde antes de abrir.',
     dishes: ['Combinado (cebiche + chaufa + tallarín saltado)', 'Jalea', 'Leche de tigre'],
   },
   {
@@ -421,20 +421,6 @@ export const LIMA_RECOMMENDATIONS: Recommendation[] = [
       'La cocina chiclayana (norte del Perú) llevada a mesa de mantel: arroz con pato, cabrito y cebiches del norte.',
     dishes: ['Arroz con pato', 'Cabrito', 'Ceviche norteño'],
   },
-  // ---------- Selvático ----------
-  {
-    id: 'amaz',
-    name: 'ámaZ',
-    category: 'selvatico',
-    district: 'Miraflores',
-    address: 'Av. La Paz 1079',
-    lng: -77.02656,
-    lat: -12.12871,
-    price: 3,
-    about:
-      'Cocina amazónica con insumos de la selva peruana: pescados de río, frutas y sabores que casi no se ven en Lima.',
-    dishes: ['Pescados amazónicos', 'Juane', 'Tragos con frutas de la selva'],
-  },
   {
     id: 'museo-larco-cafe',
     name: 'Museo Larco Café Restaurant',
@@ -599,19 +585,6 @@ export const LIMA_RECOMMENDATIONS: Recommendation[] = [
     about:
       'Anticuchería de barrio junto a la Bajada de Baños de Barranco. Se llena de noche; perfecto antes o después de pasear por el puente.',
     dishes: ['Anticuchos de corazón', 'Rachi', 'Picarones'],
-  },
-  {
-    id: 'osso',
-    name: 'Osso Carnicería y Salumería',
-    category: 'anticucho',
-    district: 'La Molina',
-    address: 'Calle Tahití 175',
-    lng: -76.9174,
-    lat: -12.07646,
-    price: 3,
-    about:
-      'Renzo Garibaldi madura la carne en casa y la vende en la misma sala donde la come. Carnicería, charcutería y mesa, todo en uno.',
-    dishes: ['Cortes madurados', 'Hamburguesa de la casa', 'Tabla de charcutería'],
   },
 
   // ---------- Alta cocina ----------
@@ -782,7 +755,7 @@ export const LIMA_RECOMMENDATIONS: Recommendation[] = [
     name: 'Museo del Pisco',
     category: 'bar',
     district: 'Cercado de Lima',
-    address: 'Jr. Carabaya 193 (Centro Histórico)',
+    address: 'Jr. Junín 201, esquina con Jr. Carabaya',
     lng: -77.02957,
     lat: -12.04577,
     price: 2,
